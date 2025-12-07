@@ -61,7 +61,7 @@ class MongoAdapter(MongoAdapterBase):
 
         try:
             if self._client:
-                self._client.close()
+                await self._client.close()
             self._database = None
             self._is_connected = False
             logger.info("mongo_disconnected")

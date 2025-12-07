@@ -138,9 +138,9 @@ class KafkaProducer:
         else:
             logger.debug(
                 "kafka_message_delivered",
-                topic=msg.topic(),
-                partition=msg.partition(),
-                offset=msg.offset(),
+                topic=msg.topic() if msg else None,
+                partition=msg.partition() if msg else None,
+                offset=msg.offset() if msg else None,
             )
 
     def flush(self, timeout: float = 10.0) -> None:
