@@ -124,7 +124,7 @@ class BaseRepository(Generic[ModelType]):
         if not instance:
             return False
 
-        await self.session.delete(instance)
+        self.session.delete(instance)
         await self.session.flush()
         return True
 
