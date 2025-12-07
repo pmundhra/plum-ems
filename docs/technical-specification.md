@@ -233,7 +233,7 @@ ExtAPI[External APIs]
 * `ReconciliationBot` monitors for any discrepancies between our internal Ledger and External Insurer’s records  
 * Runs on a schedule (e.g., Nightly) or event-triggered (Post-Batch).  
 * Uses the Two-way Match algorithm to identify ghost policies (risk of gap) or zombie policies (financial leak).  
-* If the Insurer returns a different Effective Date than requested, the system will update the local `policy_coverage` table to match the Insurer's date and generate a `DATE_MISMATCH` warning event for the HR Admin.
+* If the Insurer returns a different Effective Date than requested, the system will update the local `policy_coverages` table to match the Insurer's date and generate a `DATE_MISMATCH` warning event for the HR Admin.
 
 ## 5\. Data Model
 
