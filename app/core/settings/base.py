@@ -66,6 +66,7 @@ class BaseAppSettings(BaseSettings):
     MONGO_PASSWORD: str = ""
     MONGO_DB: str = "ems_audit"
     MONGO_AUTH_SOURCE: str = "admin"
+    MONGO_MAX_QUERY_LIMIT: int = 1000  # Maximum documents to return in a single query
 
     @property
     def mongo_url(self) -> str:

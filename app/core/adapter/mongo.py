@@ -169,7 +169,7 @@ class MongoAdapter(MongoAdapterBase):
             database: Database name
             collection: Collection name
             filter: Filter criteria
-            limit: Maximum number of documents
+            limit: Maximum number of documents (will be capped at MONGO_MAX_QUERY_LIMIT)
             skip: Number of documents to skip
 
         Returns:
@@ -180,10 +180,13 @@ class MongoAdapter(MongoAdapterBase):
 
         if skip:
             cursor = cursor.skip(skip)
-        if limit:
-            cursor = cursor.limit(limit)
-
-        results = await cursor.to_list(length=limit)
+        
+        # Use settings limit if no limit provided, or cap the provided limit
+        effective_limit = limit if limit is not None else settings.MONGO_MAX_QUERY_LIMIT
+        effective_limit = min(effective_limit, settings.MONGO_MAX_QUERY_LIMIT)
+        
+        cursor = cursor.limit(effective_limit)
+        results = await cursor.to_list(length=effective_limit)
         return results
 
 
