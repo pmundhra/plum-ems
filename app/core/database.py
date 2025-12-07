@@ -2,34 +2,27 @@
 
 from datetime import datetime
 from typing import Any
-from uuid import uuid4
 
-from sqlalchemy import Column, DateTime, func
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.ext.declarative import declarative_base, declared_attr
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy import DateTime, func
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, declared_attr
 
 
 class Base(DeclarativeBase):
     """Base class for all SQLAlchemy models"""
 
-    @declared_attr
+    @declared_attr.directive
     def __tablename__(cls) -> str:
         """Generate table name from class name"""
         return cls.__name__.lower()
 
-    id: Any = Column(
-        UUID(as_uuid=True),
-        primary_key=True,
-        default=uuid4,
-        index=True,
-    )
-    created_at: datetime = Column(
+    # Note: Individual models define their own id column
+    # Base provides created_at and updated_at for all models
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         nullable=False,
     )
-    updated_at: datetime = Column(
+    updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         onupdate=func.now(),
