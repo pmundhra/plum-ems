@@ -2,10 +2,9 @@
 
 from decimal import Decimal
 from typing import Any
-from uuid import UUID
 
 from sqlalchemy import String, Numeric, ForeignKey
-from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -16,7 +15,6 @@ class Employer(Base):
 
     __tablename__ = "employers"
 
-    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     ea_balance: Mapped[Decimal] = mapped_column(
         Numeric(15, 2), default=Decimal("0.00"), nullable=False

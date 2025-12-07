@@ -1,10 +1,9 @@
 """Employee SQLAlchemy model"""
 
 from typing import Any
-from uuid import UUID
 
 from sqlalchemy import String, ForeignKey
-from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -15,9 +14,8 @@ class Employee(Base):
 
     __tablename__ = "employees"
 
-    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, index=True)
-    employer_id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True),
+    employer_id: Mapped[str] = mapped_column(
+        String(17),
         ForeignKey("employers.id", ondelete="CASCADE"),
         nullable=False,
         index=True,

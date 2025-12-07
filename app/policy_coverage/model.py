@@ -2,10 +2,9 @@
 
 from datetime import date
 from typing import Any
-from uuid import UUID
 
 from sqlalchemy import String, Date, ForeignKey
-from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -16,9 +15,8 @@ class PolicyCoverage(Base):
 
     __tablename__ = "policy_coverages"
 
-    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, index=True)
-    employee_id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True),
+    employee_id: Mapped[str] = mapped_column(
+        String(17),
         ForeignKey("employees.id", ondelete="CASCADE"),
         nullable=False,
         index=True,

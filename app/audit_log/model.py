@@ -2,7 +2,6 @@
 
 from datetime import datetime
 from typing import Any
-from uuid import UUID
 
 from pydantic import BaseModel, Field
 
@@ -36,7 +35,7 @@ class AuditLogDocument(BaseModel):
     """MongoDB document model for audit logs"""
 
     # MongoDB will auto-generate _id, but we track our own reference
-    endorsement_id: str = Field(..., description="UUID string linking to Postgres endorsement_requests.id")
+    endorsement_id: str = Field(..., description="String ID linking to Postgres endorsement_requests.id")
     trace_id: str | None = Field(None, description="OpenTelemetry Trace ID for distributed tracing")
     insurer_id: str = Field(..., description="The target external system (e.g., 'AETNA_01')")
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="Time of the interaction")
