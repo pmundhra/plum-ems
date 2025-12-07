@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.pool import NullPool, QueuePool
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy import text
 
 from app.core.adapter.postgres_base import PostgresAdapterBase
 from app.core.settings import settings
@@ -86,7 +87,7 @@ class PostgresAdapter(PostgresAdapterBase):
 
         try:
             async with self._engine.begin() as conn:
-                await conn.execute("SELECT 1")
+                await conn.execute(text("SELECT 1"))
             return True
         except Exception as e:
             logger.error("postgres_health_check_failed", error=str(e))
@@ -132,7 +133,7 @@ class PostgresAdapter(PostgresAdapterBase):
             Query result
         """
         async with self.get_session() as session:
-            result = await session.execute(query, params or {})
+            result = await session.execute(text(query), params or {})
             return result
 
     async def execute_transaction(self, operations: list[callable]) -> Any:
