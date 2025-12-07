@@ -1,0 +1,1 @@
+"""Policy coverage entity module"""

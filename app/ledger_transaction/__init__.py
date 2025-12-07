@@ -1,0 +1,1 @@
+"""Ledger transaction entity module"""

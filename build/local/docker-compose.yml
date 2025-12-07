@@ -1,0 +1,159 @@
+name: plum-ems
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:17-alpine
+    container_name: ems-postgres
+    environment:
+      POSTGRES_USER: plum
+      POSTGRES_PASSWORD: 0d3983283e3d3bbe7c12e81b4c5f98a6
+      POSTGRES_DB: plum-ems
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U plum -d plum-ems"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ems-network
+
+  # MongoDB
+  mongodb:
+    image: mongo:8.0
+    container_name: ems-mongodb
+    environment:
+      MONGO_INITDB_DATABASE: ems_audit
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ems-network
+
+  # Redis
+  redis:
+    image: redis:8.0-alpine
+    container_name: ems-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ems-network
+
+  # Kafka (KRaft mode - no Zookeeper required)
+  # KRaft mode is production-ready since Kafka 3.3+ and simplifies infrastructure
+  # Advantages: Simpler setup, better performance, easier operations, future-proof
+  # Note: Kafka 4.0+ fully supports KRaft and Zookeeper is deprecated
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: ems-kafka
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      # KRaft mode configuration
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093,PLAINTEXT_INTERNAL://0.0.0.0:9094
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      # Broker configuration
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      # Auto-create topics when messages are produced to non-existent topics
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      # Default configurations for auto-created topics
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
+      KAFKA_MIN_INSYNC_REPLICAS: 1
+      # Log retention
+      KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_LOG_SEGMENT_BYTES: 1073741824
+      KAFKA_LOG_RETENTION_BYTES: -1
+      KAFKA_LOG_CLEANUP_POLICY: delete
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - ems-network
+
+  # Application
+  app:
+    build:
+      context: ../..
+      dockerfile: build/Dockerfile
+    container_name: ems-app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      ENVIRONMENT: local
+      PYTHONPATH: /app
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: plum
+      POSTGRES_PASSWORD: 0d3983283e3d3bbe7c12e81b4c5f98a6
+      POSTGRES_DB: plum-ems
+      MONGO_HOST: mongodb
+      MONGO_PORT: 27017
+      MONGO_DB: ems_audit
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9094
+      SECRET_KEY: local-secret-key-change-in-production
+      HMAC_SECRET_KEY: local-hmac-secret-key-change-in-production
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../../app:/app/app
+    # Command is environment-specific:
+    # - Local/Dev: uvicorn with reload for development
+    # - Production: Use gunicorn with uvicorn workers for better performance
+    #   Example: gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - ems-network
+
+volumes:
+  postgres_data:
+  mongodb_data:
+  redis_data:
+  kafka_data:
+
+networks:
+  ems-network:
+    driver: bridge

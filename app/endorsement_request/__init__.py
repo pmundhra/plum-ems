@@ -1,0 +1,1 @@
+"""Endorsement request entity module"""
