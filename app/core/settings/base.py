@@ -101,6 +101,26 @@ class BaseAppSettings(BaseSettings):
     KAFKA_GROUP_ID: str = "ems-consumers"
     KAFKA_AUTO_OFFSET_RESET: str = "earliest"
     KAFKA_ENABLE_AUTO_COMMIT: bool = False
+    
+    # Kafka Topics
+    KAFKA_TOPIC_INGESTED: str = "endorsement.ingested"
+    KAFKA_TOPIC_PRIORITIZED: str = "endorsement.prioritized"
+    
+    # Kafka Consumer Configuration
+    KAFKA_CONSUMER_MODE: Literal["single", "batch"] = "batch"
+    KAFKA_CONSUMER_MAX_POLL_RECORDS: int = 50
+    KAFKA_CONSUMER_BATCH_TIMEOUT_SECONDS: float = 30.0
+    KAFKA_CONSUMER_GROUP_ID: str = "smart-scheduler-group"
+    KAFKA_IN_TOPICS: str = "endorsement.ingested"  # Comma-separated list
+    ENABLED_HANDLERS: str = "smart_scheduler_handler"  # Comma-separated list
+    KAFKA_DLQ_TOPIC: str = "dead_letter_queue"
+    KAFKA_PRODUCER_ACKS: str = "all"
+    KAFKA_PRODUCER_RETRIES: int = 3
+    KAFKA_PRODUCER_ENABLE_IDEMPOTENCE: bool = True
+    KAFKA_CONSUMER_AUTO_OFFSET_RESET: str = "earliest"
+
+    # Smart Scheduler
+    SCHEDULER_WINDOW_SECONDS: int = 300
 
     # Logging
     LOG_LEVEL: str = "INFO"
