@@ -11,6 +11,7 @@ from app.core.adapter.postgres import get_postgres_adapter
 from app.core.metrics import KAFKA_MESSAGES_PRODUCED, LEDGER_TRANSACTIONS_TOTAL
 from app.core.settings import settings
 from app.employer.repository import EmployerRepository
+from app.ledger.pricing import LedgerPricingClient
 from app.ledger_transaction.model import LedgerTransaction
 from app.utils.logger import get_logger
 
@@ -23,6 +24,7 @@ class LedgerService:
     def __init__(self) -> None:
         self._producer = get_kafka_producer()
         self._postgres = get_postgres_adapter()
+        self._pricing_client = LedgerPricingClient()
 
     async def process_check_funds(self, kafka_payload: dict[str, Any]) -> None:
         endorsement_id = kafka_payload.get("endorsement_id")
@@ -37,7 +39,7 @@ class LedgerService:
             )
             return
 
-        amount = self._extract_amount(kafka_payload)
+        amount = await self._resolve_amount(kafka_payload, request_type)
         amount = max(Decimal(0), amount)
         is_credit = request_type.upper() == "DELETION"
 
@@ -163,6 +165,21 @@ class LedgerService:
                 employer_id=employer_id,
                 error=str(exc),
             )
+
+    async def _resolve_amount(
+        self,
+        payload: dict[str, Any],
+        request_type: str,
+    ) -> Decimal:
+        """
+        Determine the amount to lock by checking request payload and pricing stub.
+        """
+        amount = self._extract_amount(payload)
+        if amount > Decimal("0"):
+            return amount
+
+        context = payload.get("payload", {})
+        return await self._pricing_client.get_endorsement_price(request_type, context)
 
     def _extract_amount(self, payload: dict[str, Any]) -> Decimal:
         amount = payload.get("amount")

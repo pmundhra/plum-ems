@@ -1,5 +1,6 @@
 """Base settings configuration"""
 
+from decimal import Decimal
 from typing import Literal
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -151,6 +152,12 @@ class BaseAppSettings(BaseSettings):
     # Ledger
     LEDGER_LOW_BALANCE_THRESHOLD: float = 1000.0
     LEDGER_LOCK_TIMEOUT_SECONDS: int = 300  # 5 minutes
+    # Pricing stub assumptions (dollars per endorsement type)
+    LEDGER_ENDORSEMENT_PRICING: dict[str, Decimal] = {
+        "ADDITION": Decimal("150.00"),
+        "MODIFICATION": Decimal("80.00"),
+        "DELETION": Decimal("45.00"),
+    }
 
     # Insurer Gateway
     INSURER_REQUEST_TIMEOUT_SECONDS: int = 30
