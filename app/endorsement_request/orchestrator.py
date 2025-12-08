@@ -342,6 +342,11 @@ class EndorsementOrchestratorService:
         }
 
         payload = kafka_payload.get("payload") or fallback_payload or {}
+        insurer_id = (
+            payload.get("insurer_id")
+            or (payload.get("coverage") or {}).get("insurer_id")
+            or kafka_payload.get("insurer_id")
+        )
         insurer_payload: dict[str, Any] = {
             "endorsement_id": kafka_payload.get("endorsement_id"),
             "employer_id": kafka_payload.get("employer_id"),
@@ -350,6 +355,8 @@ class EndorsementOrchestratorService:
             "payload": payload,
             "ledger_context": ledger_context,
         }
+        if insurer_id:
+            insurer_payload["insurer_id"] = insurer_id
         return insurer_payload
 
     def _build_completion_payload(
