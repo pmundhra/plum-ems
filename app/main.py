@@ -1,5 +1,6 @@
 """FastAPI application entry point"""
 
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -25,10 +26,31 @@ from app.endpoints.v1 import employers, employees, policy_coverages, endorsement
 from app.utils.logger import get_logger
 from app.utils.request_id import get_request_id, bind_request_context
 from app.core.adapter.postgres import init_postgres, close_postgres
+from app.core.adapter.redis import init_redis, close_redis
+from app.core.adapter.kafka import close_kafka
 from fastapi import Request
 from fastapi.exceptions import RequestValidationError, HTTPException
 
 logger = get_logger(__name__)
+
+# Lifespan context
+@asynccontextmanager
+async def app_lifespan(app: FastAPI):
+    await init_postgres()
+    await init_redis()
+    logger.info(
+        "application_started",
+        app_name=settings.APP_NAME,
+        version=settings.APP_VERSION,
+        environment=settings.ENVIRONMENT,
+    )
+    try:
+        yield
+    finally:
+        await close_postgres()
+        await close_redis()
+        await close_kafka()
+        logger.info("application_shutdown")
 
 # Create FastAPI application
 app = FastAPI(
@@ -37,6 +59,7 @@ app = FastAPI(
     description="Endorsement Management System for Group Insurance",
     docs_url="/docs",
     redoc_url="/redoc",
+    lifespan=app_lifespan,
 )
 
 # CORS middleware
@@ -73,21 +96,3 @@ app.include_router(employees.router, prefix=settings.API_PREFIX)
 app.include_router(policy_coverages.router, prefix=settings.API_PREFIX)
 app.include_router(endorsements.router, prefix=settings.API_PREFIX)
 
-@app.on_event("startup")
-async def startup_event():
-    """Application startup event"""
-    # Initialize database connection
-    await init_postgres()
-    logger.info(
-        "application_started",
-        app_name=settings.APP_NAME,
-        version=settings.APP_VERSION,
-        environment=settings.ENVIRONMENT,
-    )
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Application shutdown event"""
-    # Close database connection
-    await close_postgres()
-    logger.info("application_shutdown")
