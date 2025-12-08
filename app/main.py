@@ -12,6 +12,7 @@ from app.core.exception_handlers import (
 )
 from app.core.exceptions import APIException
 from app.endpoints import health, metrics
+from app.endpoints.v1 import employers, employees
 from app.utils.logger import get_logger
 from app.utils.request_id import get_request_id, bind_request_context
 from fastapi import Request
@@ -55,6 +56,10 @@ app.add_exception_handler(Exception, generic_exception_handler)
 # Include routers
 app.include_router(health.router, tags=["Health"])
 app.include_router(metrics.router, tags=["Metrics"])
+
+# Include v1 API routers
+app.include_router(employers.router, prefix=settings.API_PREFIX)
+app.include_router(employees.router, prefix=settings.API_PREFIX)
 
 @app.on_event("startup")
 async def startup_event():
