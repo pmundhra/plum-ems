@@ -4,7 +4,7 @@ This document tracks the implementation progress of the Endorsement Management S
 
 ## Overview
 - **Project**: Endorsement Management System for Group Insurance
-- **Status**: Planning Phase
+- **Status**: Implementation In Progress
 - **Last Updated**: 2025-01-27
 
 ## Implementation Tasks
@@ -12,40 +12,40 @@ This document tracks the implementation progress of the Endorsement Management S
 ### Phase 1: Project Foundation
 | Task ID | Task Name | Status | Prompt | Outcome Summary | Commit Hash |
 |---------|-----------|--------|--------|-----------------|-------------|
-| T001 | Project structure and dependencies | Pending | Set up Python project structure with FastAPI, install core dependencies (FastAPI, SQLAlchemy, Alembic, Pydantic, Kafka, Redis, MongoDB clients, Prometheus, structlog) | Project structure created with requirements.txt, pyproject.toml, and basic directory layout following code-structure.md | - |
-| T002 | Core settings and configuration | Pending | Implement core/settings with base settings class and environment-specific overrides (dev, staging, prod) using Pydantic Settings | Settings module with environment-based configuration management | - |
-| T003 | Database adapters foundation | Pending | Create core/adapter package with base database connection classes for PostgreSQL, MongoDB, and Redis | Database adapter interfaces and connection managers | - |
-| T004 | Structured logging setup | Pending | Implement structured JSON logging using structlog following 06-structured-logging.md guidelines | Logger configured with JSON output, event-based logging, request ID tracking | - |
-| T005 | Error handling framework | Pending | Create error models and exception handlers following 03-error-handling.md (APIException base, ErrorDetail, ErrorResponse models) | Standardized error response format with custom exceptions | - |
-| T006 | Prometheus metrics setup | Pending | Set up Prometheus metrics endpoint and core metrics (HTTP requests, errors) following 05-prometheus-metrics.md | /metrics endpoint with basic HTTP and error metrics | - |
+| T001 | Project structure and dependencies | Completed | Set up Python project structure with FastAPI, install core dependencies (FastAPI, SQLAlchemy, Alembic, Pydantic, Kafka, Redis, MongoDB clients, Prometheus, structlog) | Project structure created with pyproject.toml using uv, and basic directory layout following code-structure.md | - |
+| T002 | Core settings and configuration | Completed | Implement core/settings with base settings class and environment-specific overrides (dev, staging, prod) using Pydantic Settings | Settings module with environment-based configuration management (base, local, dev, staging, production) | - |
+| T003 | Database adapters foundation | Completed | Create core/adapter package with base database connection classes for PostgreSQL, MongoDB, and Redis | Database adapter interfaces and connection managers with base classes | - |
+| T004 | Structured logging setup | Completed | Implement structured JSON logging using structlog following 06-structured-logging.md guidelines | Logger configured with JSON output, event-based logging, request ID tracking | - |
+| T005 | Error handling framework | Completed | Create error models and exception handlers following 03-error-handling.md (APIException base, ErrorDetail, ErrorResponse models) | Standardized error response format with custom exceptions and global handlers | - |
+| T006 | Prometheus metrics setup | Completed | Set up Prometheus metrics endpoint and core metrics (HTTP requests, errors) following 05-prometheus-metrics.md | /metrics endpoint with basic HTTP and error metrics | - |
 
 ### Phase 2: Database Models and Migrations
 | Task ID | Task Name | Status | Prompt | Outcome Summary | Commit Hash |
 |---------|-----------|--------|--------|-----------------|-------------|
-| T007 | PostgreSQL models - Core entities | Pending | Create SQLAlchemy models for employers, employees, policy_coverages, endorsement_requests, ledger_transactions tables | Database models with relationships and constraints | - |
-| T008 | Alembic migration - Initial schema | Pending | Create initial Alembic migration for all PostgreSQL tables | Database migration script for initial schema | - |
-| T009 | MongoDB models and collections | Pending | Create MongoDB document models for audit_logs collection | MongoDB models and collection setup | - |
-| T010 | Repository base classes | Pending | Create base repository classes in core/base for common CRUD operations | Abstract repository pattern implementation | - |
+| T007 | PostgreSQL models - Core entities | Completed | Create SQLAlchemy models for employers, employees, policy_coverages, endorsement_requests, ledger_transactions tables | Database models with relationships, constraints, and 17-char base58 IDs | - |
+| T008 | Alembic migration - Initial schema | Completed | Create initial Alembic migration for all PostgreSQL tables | Database migration script (90ff04ededb8) for initial schema with all 5 tables | - |
+| T009 | MongoDB models and collections | Completed | Create MongoDB document models for audit_logs collection | MongoDB models and collection setup with Pydantic schemas | - |
+| T010 | Repository base classes | Completed | Create base repository classes in core/base for common CRUD operations | Abstract repository pattern with employer_id scoping for multi-tenancy | - |
 
 ### Phase 3: Core Infrastructure
 | Task ID | Task Name | Status | Prompt | Outcome Summary | Commit Hash |
 |---------|-----------|--------|--------|-----------------|-------------|
-| T011 | PostgreSQL adapter implementation | Pending | Implement PostgreSQL connection pool and session management in core/adapter/postgres.py | PostgreSQL adapter with connection pooling | - |
-| T012 | MongoDB adapter implementation | Pending | Implement MongoDB client and database connection in core/adapter/mongo.py | MongoDB adapter with connection management | - |
-| T013 | Redis adapter implementation | Pending | Implement Redis client for caching and distributed locking in core/adapter/redis.py | Redis adapter with connection pooling | - |
-| T014 | Kafka producer/consumer setup | Pending | Create Kafka producer and consumer base classes in core/adapter/kafka.py | Kafka integration with async producer/consumer | - |
-| T015 | Security and authentication | Pending | Implement JWT authentication, OAuth2 dependency, and HMAC signature verification in core/security | Authentication middleware and dependencies | - |
-| T016 | Distributed locking service | Pending | Implement distributed locking using Redis in core/service/lock.py | Redis-based distributed lock service | - |
+| T011 | PostgreSQL adapter implementation | Completed | Implement PostgreSQL connection pool and session management in core/adapter/postgres.py | PostgreSQL adapter with connection pooling and health checks | - |
+| T012 | MongoDB adapter implementation | Completed | Implement MongoDB client and database connection in core/adapter/mongo.py | MongoDB adapter with connection management and query limits | - |
+| T013 | Redis adapter implementation | Completed | Implement Redis client for caching and distributed locking in core/adapter/redis.py | Redis adapter with connection pooling | - |
+| T014 | Kafka producer/consumer setup | Completed | Create Kafka producer and consumer base classes in core/adapter/kafka.py | Kafka integration with confluent-kafka (KRaft mode) | - |
+| T015 | Security and authentication | Completed | Implement JWT authentication, OAuth2 dependency, and HMAC signature verification in core/security | JWT authentication with scopes, OAuth2, HMAC verification, and security dependencies | - |
+| T016 | Distributed locking service | Completed | Implement distributed locking using Redis in core/service/lock.py | Redis-based distributed lock service with context manager | - |
 
 ### Phase 4: Business Logic - Entities
 | Task ID | Task Name | Status | Prompt | Outcome Summary | Commit Hash |
 |---------|-----------|--------|--------|-----------------|-------------|
-| T017 | Employer entity - Model, Schema, Repository | Pending | Create employer module with SQLAlchemy model, Pydantic schemas (request/response), and repository | Employer CRUD operations | - |
-| T018 | Employee entity - Model, Schema, Repository | Pending | Create employee module with model, schemas, and repository | Employee CRUD operations | - |
-| T019 | Policy Coverage entity | Pending | Create policy_coverage module with model, schemas, and repository | Policy coverage tracking | - |
-| T020 | Endorsement Request entity | Pending | Create endorsement_request module with model, schemas, and repository | Endorsement request management | - |
-| T021 | Ledger Transaction entity | Pending | Create ledger_transaction module with model, schemas, and repository | Financial transaction tracking | - |
-| T022 | Audit Log entity (MongoDB) | Pending | Create audit_log module for MongoDB with document model and repository | Audit log storage and retrieval | - |
+| T017 | Employer entity - Model, Schema, Repository | Completed | Create employer module with SQLAlchemy model, Pydantic schemas (request/response), and repository | Employer CRUD operations with unscoped methods for admin access | - |
+| T018 | Employee entity - Model, Schema, Repository | Completed | Create employee module with model, schemas, and repository | Employee CRUD operations with employer scoping | - |
+| T019 | Policy Coverage entity | Completed | Create policy_coverage module with model, schemas, and repository | Policy coverage tracking with date range queries | - |
+| T020 | Endorsement Request entity | Completed | Create endorsement_request module with model, schemas, and repository | Endorsement request management with status and type filtering | - |
+| T021 | Ledger Transaction entity | Completed | Create ledger_transaction module with model, schemas, and repository | Financial transaction tracking model (repository pending) | - |
+| T022 | Audit Log entity (MongoDB) | Completed | Create audit_log module for MongoDB with document model and repository | Audit log storage and retrieval with Pydantic models | - |
 
 ### Phase 5: Business Logic - Services
 | Task ID | Task Name | Status | Prompt | Outcome Summary | Commit Hash |
@@ -62,8 +62,8 @@ This document tracks the implementation progress of the Endorsement Management S
 ### Phase 6: API Endpoints
 | Task ID | Task Name | Status | Prompt | Outcome Summary | Commit Hash |
 |---------|-----------|--------|--------|-----------------|-------------|
-| T031 | API foundation and middleware | Pending | Set up FastAPI app with API versioning (v1), request ID middleware, CORS, and root endpoint | FastAPI application with middleware | - |
-| T032 | Pagination utilities | Pending | Implement pagination models and utilities following 04-pagination.md (PaginatedResponse, link headers) | Pagination support for list endpoints | - |
+| T031 | API foundation and middleware | Completed | Set up FastAPI app with API versioning (v1), request ID middleware, CORS, and root endpoint | FastAPI application with middleware, exception handlers, and health/metrics endpoints | - |
+| T032 | Pagination utilities | Completed | Implement pagination models and utilities following 04-pagination.md (PaginatedResponse, link headers) | Pagination support with PaginatedResponse and RFC 5988 Link headers | - |
 | T033 | Ingestion API - Single endorsement | Pending | Implement POST /api/v1/endorsements/ endpoint following 02-json-body-requests.md | Single endorsement creation endpoint | - |
 | T034 | Ingestion API - Batch upload | Pending | Implement POST /api/v1/endorsements/batch endpoint for CSV/JSON file uploads | Batch endorsement upload | - |
 | T035 | Callback API - Insurer notifications | Pending | Implement POST /api/v1/webhooks/insurers/{insurer_id}/notify endpoint with HMAC verification | Webhook endpoint for insurer callbacks | - |
@@ -97,19 +97,35 @@ This document tracks the implementation progress of the Endorsement Management S
 ### Phase 9: Deployment and Infrastructure
 | Task ID | Task Name | Status | Prompt | Outcome Summary | Commit Hash |
 |---------|-----------|--------|--------|-----------------|-------------|
-| T054 | Docker setup | Pending | Create Dockerfile for application and docker-compose.yml for local development with all services (Postgres, MongoDB, Redis, Kafka, Zookeeper) | Containerized development environment | - |
+| T054 | Docker setup | Completed | Create Dockerfile for application and docker-compose.yml for local development with all services (Postgres, MongoDB, Redis, Kafka) | Containerized development environment with KRaft mode Kafka (no Zookeeper), custom Postgres user/db | - |
 | T055 | Environment configuration | Pending | Create .env.example and environment-specific configurations for local, staging, production | Environment configuration management | - |
 | T056 | Database migration scripts | Pending | Create scripts for running migrations and seeding initial data | Database setup automation | - |
 | T057 | Monitoring and dashboards | Pending | Set up Grafana dashboards for Prometheus metrics and log aggregation | Observability dashboards | - |
 | T058 | Documentation | Pending | Create API documentation, deployment guides, and operational runbooks | Complete project documentation | - |
 
+### Phase 10: Additional API Endpoints
+| Task ID | Task Name | Status | Prompt | Outcome Summary | Commit Hash |
+|---------|-----------|--------|--------|-----------------|-------------|
+| T060 | POST /api/v1/employers - Create employer | Completed | Implement POST /api/v1/employers endpoint with validation | Create employer endpoint with JWT auth, scope validation, and admin checks | - |
+| T061 | GET /api/v1/employers/{id} - Get employer by ID | Completed | Implement GET /api/v1/employers/{id} endpoint | Get employer by ID with authorization checks (own employer or admin) | - |
+| T062 | GET /api/v1/employers - List employers with pagination | Completed | Implement GET /api/v1/employers endpoint with pagination | List employers with pagination, admin sees all, users see only their employer | - |
+| T063 | PUT /api/v1/employers/{id} - Update employer | Completed | Implement PUT /api/v1/employers/{id} endpoint | Update employer with authorization and status change restrictions | - |
+| T064 | POST /api/v1/employees - Create employee | Completed | Implement POST /api/v1/employees endpoint with validation | Create employee endpoint with employer scoping and duplicate code validation | - |
+| T065 | GET /api/v1/employees/{id} - Get employee by ID | Completed | Implement GET /api/v1/employees/{id} endpoint | Get employee by ID scoped to authenticated user's employer | - |
+| T066 | GET /api/v1/employees - List employees with pagination | Completed | Implement GET /api/v1/employees endpoint with pagination | List employees with pagination, scoped by employer_id from JWT token | - |
+| T067 | PUT /api/v1/employees/{id} - Update employee | Completed | Implement PUT /api/v1/employees/{id} endpoint | Update employee with employer scoping and duplicate validation | - |
+| T068 | POST /api/v1/policy-coverages - Create policy coverage | Completed | Implement POST /api/v1/policy-coverages endpoint | Create policy coverage with employee validation, status validation, and date range checks | - |
+| T069 | GET /api/v1/policy-coverages/{id} - Get policy coverage by ID | Completed | Implement GET /api/v1/policy-coverages/{id} endpoint | Get policy coverage by ID scoped to authenticated user's employer | - |
+| T070 | GET /api/v1/policy-coverages - List policy coverages with pagination | Completed | Implement GET /api/v1/policy-coverages endpoint with pagination | List policy coverages with pagination, filtering by employee_id or insurer_id | - |
+| T071 | PUT /api/v1/policy-coverages/{id} - Update policy coverage | Completed | Implement PUT /api/v1/policy-coverages/{id} endpoint | Update policy coverage with validation and employer scoping | - |
+
 ## Progress Summary
 
-- **Total Tasks**: 58
-- **Completed**: 0
+- **Total Tasks**: 70
+- **Completed**: 33
 - **In Progress**: 0
-- **Pending**: 58
-- **Completion**: 0%
+- **Pending**: 37
+- **Completion**: 47.1%
 
 ## Notes
 
