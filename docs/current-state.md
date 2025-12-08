@@ -6,6 +6,7 @@ This document tracks the implementation progress of the Endorsement Management S
 - **Project**: Endorsement Management System for Group Insurance
 - **Status**: Implementation In Progress
 - **Last Updated**: 2025-01-27
+- **Python Version**: 3.12-3.13 (downgraded from 3.14 for stability)
 
 ## Implementation Tasks
 
@@ -30,7 +31,7 @@ This document tracks the implementation progress of the Endorsement Management S
 ### Phase 3: Core Infrastructure
 | Task ID | Task Name | Status | Prompt | Outcome Summary | Commit Hash |
 |---------|-----------|--------|--------|-----------------|-------------|
-| T011 | PostgreSQL adapter implementation | Completed | Implement PostgreSQL connection pool and session management in core/adapter/postgres.py | PostgreSQL adapter with connection pooling and health checks | - |
+| T011 | PostgreSQL adapter implementation | Completed | Implement PostgreSQL connection pool and session management in core/adapter/postgres.py | PostgreSQL adapter with connection pooling, health checks, and close_session method. Fixed async pool class (AsyncAdaptedQueuePool). Database initialization on startup. | - |
 | T012 | MongoDB adapter implementation | Completed | Implement MongoDB client and database connection in core/adapter/mongo.py | MongoDB adapter with connection management and query limits | - |
 | T013 | Redis adapter implementation | Completed | Implement Redis client for caching and distributed locking in core/adapter/redis.py | Redis adapter with connection pooling | - |
 | T014 | Kafka producer/consumer setup | Completed | Create Kafka producer and consumer base classes in core/adapter/kafka.py | Kafka integration with confluent-kafka (KRaft mode) | - |
@@ -64,8 +65,8 @@ This document tracks the implementation progress of the Endorsement Management S
 |---------|-----------|--------|--------|-----------------|-------------|
 | T031 | API foundation and middleware | Completed | Set up FastAPI app with API versioning (v1), request ID middleware, CORS, and root endpoint | FastAPI application with middleware, exception handlers, and health/metrics endpoints | - |
 | T032 | Pagination utilities | Completed | Implement pagination models and utilities following 04-pagination.md (PaginatedResponse, link headers) | Pagination support with PaginatedResponse and RFC 5988 Link headers | - |
-| T033 | Ingestion API - Single endorsement | Pending | Implement POST /api/v1/endorsements/ endpoint following 02-json-body-requests.md | Single endorsement creation endpoint | - |
-| T034 | Ingestion API - Batch upload | Pending | Implement POST /api/v1/endorsements/batch endpoint for CSV/JSON file uploads | Batch endorsement upload | - |
+| T033 | Ingestion API - Single endorsement | Completed | Implement POST /api/v1/endorsements/ endpoint following 02-json-body-requests.md | Single endorsement creation endpoint with validation, employer scoping, default policy support, Kafka publishing to endorsement.ingested topic | - |
+| T034 | Ingestion API - Batch upload | Completed | Implement POST /api/v1/endorsements/batch endpoint for CSV/JSON file uploads | Batch endorsement upload with CSV/JSON parsing, validation, error handling, and Kafka publishing | - |
 | T035 | Callback API - Insurer notifications | Pending | Implement POST /api/v1/webhooks/insurers/{insurer_id}/notify endpoint with HMAC verification | Webhook endpoint for insurer callbacks | - |
 | T036 | Callback API - Batch notifications | Pending | Implement POST /api/v1/webhooks/insurers/{insurer_id}/batch-notify endpoint | Batch webhook endpoint | - |
 | T037 | Ledger API - Balance | Pending | Implement GET /api/v1/ledger/balance endpoint with pagination | Account balance retrieval | - |
@@ -122,10 +123,21 @@ This document tracks the implementation progress of the Endorsement Management S
 ## Progress Summary
 
 - **Total Tasks**: 70
-- **Completed**: 33
+- **Completed**: 35
 - **In Progress**: 0
-- **Pending**: 37
-- **Completion**: 47.1%
+- **Pending**: 35
+- **Completion**: 50.0%
+
+## Recent Updates
+
+- **2025-01-27**: 
+  - Implemented ingestion API endpoints (T033, T034) with single and batch endorsement creation
+  - Added support for default policy configuration from employer config
+  - Fixed PostgreSQL adapter to use AsyncAdaptedQueuePool and added close_session method
+  - Added database initialization on application startup
+  - Downgraded Python version requirement from 3.14 to 3.12-3.13 for better stability and library compatibility
+  - Cleaned up JWT security code, removing Python 3.14 compatibility workarounds
+  - Added model imports in main.py for SQLAlchemy relationship resolution
 
 ## Notes
 
@@ -133,3 +145,4 @@ This document tracks the implementation progress of the Endorsement Management S
 - Each task should include appropriate tests
 - Follow all guidelines from the docs folder
 - Maintain code quality and test coverage > 80%
+- Python 3.12 or 3.13 recommended for production stability
