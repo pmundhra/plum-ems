@@ -82,7 +82,7 @@ This document tracks the implementation progress of the Endorsement Management S
 | T043 | Kafka consumer - Orchestrator | Completed | Added orchestrator consumer that updates request status and emits ledger/insurer pipeline events | Orchestrator event consumer | - |
 | T044 | Kafka consumer - Ledger | Completed | Added ledger consumer/service that locks funds (or fails) and emits funds.locked events, ready for the insurer pipeline | Ledger event consumer | - |
 | T045 | Kafka consumer - Insurer Gateway | Completed | Create Kafka consumer that sends requests to insurers and handles responses | Strategy-based insurer gateway service + worker, audit logging, configs | - |
-| T046 | DLQ and retry mechanism | Pending | Implement Dead Letter Queue handling with retry topics and exponential backoff | Error recovery with DLQ | - |
+| T046 | DLQ and retry mechanism | Completed | Implement Dead Letter Queue handling with retry topics and exponential backoff | Orchestrator now routes failures through `insurer.request.retry`/`insurer.request.dlq`, and the insurer gateway handler honors the configured backoff delay before reattempting | - |
 | T047 | Park and Wake mechanism | Pending | Implement ON_HOLD_FUNDS status handling, park transactions, wake on balance increase | Insufficient funds recovery | - |
 
 ### Phase 8: Testing
@@ -100,7 +100,7 @@ This document tracks the implementation progress of the Endorsement Management S
 |---------|-----------|--------|--------|-----------------|-------------|
 | T054 | Docker setup | Completed | Create Dockerfile for application and docker-compose.yml for local development with all services (Postgres, MongoDB, Redis, Kafka) | Containerized development environment with KRaft mode Kafka (no Zookeeper), custom Postgres user/db | - |
 | T055 | Environment configuration | Completed | Create .env.example and environment-specific configurations for local, staging, production | Added `env_configs/env.example` plus local/staging/production overrides and updated README guidance | - |
-| T056 | Database migration scripts | Pending | Create scripts for running migrations and seeding initial data | Database setup automation | - |
+| T056 | Database migration scripts | Completed | Create scripts for running migrations and seeding initial data | Database setup automation | - |
 | T057 | Monitoring and dashboards | Pending | Set up Grafana dashboards for Prometheus metrics and log aggregation | Observability dashboards | - |
 | T058 | Documentation | Pending | Create API documentation, deployment guides, and operational runbooks | Complete project documentation | - |
 
@@ -123,11 +123,11 @@ This document tracks the implementation progress of the Endorsement Management S
 ## Progress Summary
 
 - **Total Tasks**: 70
-- **Completed**: 52
+- **Completed**: 54
 - **In Progress**: 0
-- **Pending**: 17
+- **Pending**: 15
 - **Skipped**: 1
-- **Completion**: 74.3%
+- **Completion**: 77.1%
 
 ## Recent Updates
 
@@ -156,6 +156,10 @@ This document tracks the implementation progress of the Endorsement Management S
 
 - **2025-12-14**:
   - Closed T055 by adding `env_configs/env.example` plus local/staging/production overrides and updating the README instructions so developers know how to seed `.env`.
+
+- **2025-12-15**:
+  - Completed T046 by making the insurer gateway handler delay `insurer.request.retry` events for the orchestrator-calculated backoff before calling the gateway.
+  - Confirmed orchestrator retry limits still send terminal failures to `insurer.request.dlq`, giving the DLQ visibility for manual intervention when needed.
 
 
 ## Notes
