@@ -108,6 +108,8 @@ class BaseAppSettings(BaseSettings):
     KAFKA_TOPIC_LEDGER_CHECK_FUNDS: str = "ledger.check_funds"
     KAFKA_TOPIC_LEDGER_FUNDS_LOCKED: str = "funds.locked"
     KAFKA_TOPIC_INSURER_REQUEST: str = "insurer.request"
+    KAFKA_TOPIC_INSURER_REQUEST_RETRY: str = "insurer.request.retry"
+    KAFKA_TOPIC_INSURER_REQUEST_DLQ: str = "insurer.request.dlq"
     KAFKA_TOPIC_INSURER_SUCCESS: str = "insurer.success"
     KAFKA_TOPIC_ENDORSEMENT_COMPLETED: str = "endorsement.completed"
     
