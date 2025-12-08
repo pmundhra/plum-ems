@@ -73,7 +73,7 @@ class InsurerGatewayService:
 
         logger.info(f"Processing insurer request for {insurer_id} with config {config}")
         logger.info(f"Request body: {kafka_payload.get('payload')}")
-        
+
         request_body = kafka_payload.get("payload") or {}
         request_headers = self._build_request_headers(config, kafka_payload, insurer_id, endorsement_id)
         request_url = config.url.format(insurer_id=insurer_id)
