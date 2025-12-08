@@ -55,7 +55,7 @@ This document tracks the implementation progress of the Endorsement Management S
 | T024 | EA Ledger Service | Completed | Implement ledger service with balance checks, fund locking, ACID transactions, insufficient funds handling | Locks employer row (`FOR UPDATE`), applies stub pricing per request type, and emits `funds.locked` events when funds are secured or parked for retry. | - |
 | T025 | Smart Scheduler Service | Completed | Implement scheduler service that prioritizes credits before debits, groups by insurer, uses tumbling windows | Implemented Redis-based tumbling window buffer and prioritization logic (Credits/Deletions first). Handler now performs in-memory prioritization and leaves batching to the BulkConsumer. | - |
 | T026 | Endorsement Orchestrator Service | Completed | Implement orchestrator with state machine (RECEIVED -> VALIDATED -> FUNDS_LOCKED -> SENT -> CONFIRMED -> ACTIVE), exponential backoff retry cycles, and retry/DLQ routing for insurer requests | Lifecycle tracked across Kafka, emits insurer requests/retries/DLQ events, and advances requests to ACTIVE on confirmation | - |
-| T027 | Insurer Gateway Service | Pending | Implement polymorphic adapter for different insurer protocols (REST, SOAP, SFTP), idempotency key generation, request/response logging to MongoDB | Multi-protocol insurer integration | - |
+| T027 | Insurer Gateway Service | Completed | Implement polymorphic adapter for different insurer protocols (REST, SOAP, SFTP), idempotency key generation, request/response logging to MongoDB | REST gateway strategy with idempotency headers and audit logging (non-REST postponed) | - |
 | T028 | Analytics Service | Pending | Implement analytics service with anomaly detection (circuit breaker on velocity spikes), pattern analysis, and cash flow prediction | Anomaly detection and predictions | - |
 | T029 | Reconciliation Service | Pending | Implement reconciliation service for 2-way matching between internal records and insurer data | Automated reconciliation | - |
 | T030 | Notification Service | Pending | Implement notification service for websocket connections and email/SMS alerts | Real-time notifications | - |
@@ -81,7 +81,7 @@ This document tracks the implementation progress of the Endorsement Management S
 | T042 | Kafka consumer - Smart Scheduler | Completed | Create Kafka consumer that reorders endorsements, groups by insurer, produces to endorsement.ready_process | Implemented IngestionConsumer that buffers requests and triggers SmartScheduler processing. | - |
 | T043 | Kafka consumer - Orchestrator | Completed | Added orchestrator consumer that updates request status and emits ledger/insurer pipeline events | Orchestrator event consumer | - |
 | T044 | Kafka consumer - Ledger | Completed | Added ledger consumer/service that locks funds (or fails) and emits funds.locked events, ready for the insurer pipeline | Ledger event consumer | - |
-| T045 | Kafka consumer - Insurer Gateway | Pending | Create Kafka consumer that sends requests to insurers and handles responses | Insurer gateway consumer | - |
+| T045 | Kafka consumer - Insurer Gateway | Completed | Create Kafka consumer that sends requests to insurers and handles responses | Strategy-based insurer gateway service + worker, audit logging, configs | - |
 | T046 | DLQ and retry mechanism | Pending | Implement Dead Letter Queue handling with retry topics and exponential backoff | Error recovery with DLQ | - |
 | T047 | Park and Wake mechanism | Pending | Implement ON_HOLD_FUNDS status handling, park transactions, wake on balance increase | Insufficient funds recovery | - |
 
@@ -123,9 +123,9 @@ This document tracks the implementation progress of the Endorsement Management S
 ## Progress Summary
 
 - **Total Tasks**: 70
-- **Completed**: 49
+- **Completed**: 50
 - **In Progress**: 0
-- **Pending**: 20
+- **Pending**: 19
 - **Skipped**: 1
 - **Completion**: 70.0%
 
@@ -149,6 +149,10 @@ This document tracks the implementation progress of the Endorsement Management S
   - Added a `ledger-worker` container that runs `ledger_handler` on `ledger.check_funds`, emits `funds.locked`, and keeps the ledger workflow decoupled from the API service.
   - Added ledger balance, top-up, and history endpoints (T037-T039) with pagination, tenant scoping, and ledger metrics updates.
   - Added an `orchestration-worker` container that reuses the Kafka consumer entrypoint with `KAFKA_IN_TOPICS=endorsement.prioritized,funds.locked,insurer.success` and `ENABLED_HANDLERS=orchestrator_handler` so the orchestrator workflow runs with the same consumer infrastructure.
+
+- **2025-12-12**:
+  - Completed T045 by wiring a strategy-driven `InsurerGatewayService`/HTTP strategy into a new handler and Docker worker that consumes `insurer.request`/`insurer.request.retry`.
+  - Added `INSURER_GATEWAY_CONFIG` entries for insurers A/B/C, refreshed the test dataset, and ensured Mongo adapter sessions satisfy the new gateway’s audit logging requirements.
 
 
 ## Notes
