@@ -8,7 +8,7 @@ from app.employee.model import Employee
 
 
 class EmployeeRepository(BaseRepository[Employee]):
-    """Repository for Employee entity"""
+    """Repository for Employee entity - all methods scoped by employer_id"""
 
     def __init__(self, session: AsyncSession):
         """Initialize employee repository"""
@@ -28,14 +28,7 @@ class EmployeeRepository(BaseRepository[Employee]):
         Returns:
             List of employee instances
         """
-        query = (
-            select(self.model)
-            .where(self.model.employer_id == employer_id)
-            .offset(skip)
-            .limit(limit)
-        )
-        result = await self.session.execute(query)
-        return list(result.scalars().all())
+        return await super().get_all(employer_id=employer_id, skip=skip, limit=limit)
 
     async def get_by_employee_code(
         self, employer_id: str, employee_code: str
@@ -44,7 +37,7 @@ class EmployeeRepository(BaseRepository[Employee]):
         Get employee by employer ID and employee code.
 
         Args:
-            employer_id: Employer ID
+            employer_id: Employer ID (required for security scoping)
             employee_code: Employee code
 
         Returns:

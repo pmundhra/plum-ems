@@ -9,7 +9,7 @@ from app.endorsement_request.model import EndorsementRequest
 
 
 class EndorsementRequestRepository(BaseRepository[EndorsementRequest]):
-    """Repository for EndorsementRequest entity"""
+    """Repository for EndorsementRequest entity - all methods scoped by employer_id"""
 
     def __init__(self, session: AsyncSession):
         """Initialize endorsement request repository"""
@@ -40,12 +40,13 @@ class EndorsementRequestRepository(BaseRepository[EndorsementRequest]):
         return list(result.scalars().all())
 
     async def get_by_status(
-        self, status: str, skip: int = 0, limit: int = 100
+        self, employer_id: str, status: str, skip: int = 0, limit: int = 100
     ) -> list[EndorsementRequest]:
         """
-        Get endorsement requests by status.
+        Get endorsement requests by status, scoped by employer_id.
 
         Args:
+            employer_id: Employer ID (required for security scoping)
             status: Request status
             skip: Number of records to skip
             limit: Maximum number of records
@@ -55,7 +56,12 @@ class EndorsementRequestRepository(BaseRepository[EndorsementRequest]):
         """
         query = (
             select(self.model)
-            .where(self.model.status == status)
+            .where(
+                and_(
+                    self.model.employer_id == employer_id,
+                    self.model.status == status,
+                )
+            )
             .order_by(self.model.created_at.asc())
             .offset(skip)
             .limit(limit)
@@ -64,12 +70,13 @@ class EndorsementRequestRepository(BaseRepository[EndorsementRequest]):
         return list(result.scalars().all())
 
     async def get_by_type(
-        self, type: str, skip: int = 0, limit: int = 100
+        self, employer_id: str, type: str, skip: int = 0, limit: int = 100
     ) -> list[EndorsementRequest]:
         """
-        Get endorsement requests by type.
+        Get endorsement requests by type, scoped by employer_id.
 
         Args:
+            employer_id: Employer ID (required for security scoping)
             type: Request type (ADDITION, DELETION, MODIFICATION)
             skip: Number of records to skip
             limit: Maximum number of records
@@ -79,7 +86,12 @@ class EndorsementRequestRepository(BaseRepository[EndorsementRequest]):
         """
         query = (
             select(self.model)
-            .where(self.model.type == type)
+            .where(
+                and_(
+                    self.model.employer_id == employer_id,
+                    self.model.type == type,
+                )
+            )
             .order_by(self.model.created_at.desc())
             .offset(skip)
             .limit(limit)
@@ -107,12 +119,17 @@ class EndorsementRequestRepository(BaseRepository[EndorsementRequest]):
         return list(result.scalars().all())
 
     async def get_by_effective_date(
-        self, effective_date: date, skip: int = 0, limit: int = 100
+        self,
+        employer_id: str,
+        effective_date: date,
+        skip: int = 0,
+        limit: int = 100,
     ) -> list[EndorsementRequest]:
         """
-        Get endorsement requests by effective date.
+        Get endorsement requests by effective date, scoped by employer_id.
 
         Args:
+            employer_id: Employer ID (required for security scoping)
             effective_date: Effective date
             skip: Number of records to skip
             limit: Maximum number of records
@@ -122,7 +139,12 @@ class EndorsementRequestRepository(BaseRepository[EndorsementRequest]):
         """
         query = (
             select(self.model)
-            .where(self.model.effective_date == effective_date)
+            .where(
+                and_(
+                    self.model.employer_id == employer_id,
+                    self.model.effective_date == effective_date,
+                )
+            )
             .order_by(self.model.created_at.asc())
             .offset(skip)
             .limit(limit)

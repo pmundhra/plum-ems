@@ -15,6 +15,12 @@ class PolicyCoverage(Base):
 
     __tablename__ = "policy_coverages"
 
+    employer_id: Mapped[str] = mapped_column(
+        String(17),
+        ForeignKey("employers.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
     employee_id: Mapped[str] = mapped_column(
         String(17),
         ForeignKey("employees.id", ondelete="CASCADE"),
@@ -32,6 +38,6 @@ class PolicyCoverage(Base):
 
     def __repr__(self) -> str:
         return (
-            f"<PolicyCoverage(id={self.id}, employee_id={self.employee_id}, "
-            f"insurer_id={self.insurer_id}, status={self.status})>"
+            f"<PolicyCoverage(id={self.id}, employer_id={self.employer_id}, "
+            f"employee_id={self.employee_id}, insurer_id={self.insurer_id}, status={self.status})>"
         )
