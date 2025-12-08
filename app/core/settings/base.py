@@ -150,6 +150,7 @@ class BaseAppSettings(BaseSettings):
     ENDORSEMENT_RETRY_BACKOFF_BASE: int = 2  # Exponential backoff base
 
     # Ledger
+    LEDGER_CURRENCY: str = "INR"
     LEDGER_LOW_BALANCE_THRESHOLD: float = 1000.0
     LEDGER_LOCK_TIMEOUT_SECONDS: int = 300  # 5 minutes
     # Pricing stub assumptions (dollars per endorsement type)

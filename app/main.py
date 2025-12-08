@@ -22,7 +22,13 @@ from app.core.exception_handlers import (
 )
 from app.core.exceptions import APIException
 from app.endpoints import health, metrics
-from app.endpoints.v1 import employers, employees, policy_coverages, endorsements
+from app.endpoints.v1 import (
+    endorsements,
+    employees,
+    employers,
+    ledger,
+    policy_coverages,
+)
 from app.utils.logger import get_logger
 from app.utils.request_id import get_request_id, bind_request_context
 from app.core.adapter.postgres import init_postgres, close_postgres
@@ -95,4 +101,5 @@ app.include_router(employers.router, prefix=settings.API_PREFIX)
 app.include_router(employees.router, prefix=settings.API_PREFIX)
 app.include_router(policy_coverages.router, prefix=settings.API_PREFIX)
 app.include_router(endorsements.router, prefix=settings.API_PREFIX)
+app.include_router(ledger.router, prefix=settings.API_PREFIX)
 

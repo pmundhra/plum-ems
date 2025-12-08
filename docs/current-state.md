@@ -52,7 +52,7 @@ This document tracks the implementation progress of the Endorsement Management S
 | Task ID | Task Name | Status | Prompt | Outcome Summary | Commit Hash |
 |---------|-----------|--------|--------|-----------------|-------------|
 | T023 | Validation Service | Completed | Implement validation service with schema validation, business rules, duplicate detection (SHA-256 hash), and tracking ID assignment | Validation service implemented with Redis-based duplicate detection (24h TTL). Integrated into ingestion endpoints. | - |
-| T024 | EA Ledger Service | Pending | Implement ledger service with balance checks, fund locking, ACID transactions, insufficient funds handling | Financial operations with locking | - |
+| T024 | EA Ledger Service | Completed | Implement ledger service with balance checks, fund locking, ACID transactions, insufficient funds handling | Locks employer row (`FOR UPDATE`), applies stub pricing per request type, and emits `funds.locked` events when funds are secured or parked for retry. | - |
 | T025 | Smart Scheduler Service | Completed | Implement scheduler service that prioritizes credits before debits, groups by insurer, uses tumbling windows | Implemented Redis-based tumbling window buffer and prioritization logic (Credits/Deletions first). Handler now performs in-memory prioritization and leaves batching to the BulkConsumer. | - |
 | T026 | Endorsement Orchestrator Service | Completed | Implement orchestrator with state machine (RECEIVED -> VALIDATED -> FUNDS_LOCKED -> SENT -> CONFIRMED -> ACTIVE), exponential backoff retry cycles, and retry/DLQ routing for insurer requests | Lifecycle tracked across Kafka, emits insurer requests/retries/DLQ events, and advances requests to ACTIVE on confirmation | - |
 | T027 | Insurer Gateway Service | Pending | Implement polymorphic adapter for different insurer protocols (REST, SOAP, SFTP), idempotency key generation, request/response logging to MongoDB | Multi-protocol insurer integration | - |
@@ -69,9 +69,9 @@ This document tracks the implementation progress of the Endorsement Management S
 | T034 | Ingestion API - Batch upload | Completed | Implement POST /api/v1/endorsements/batch endpoint for CSV/JSON file uploads | Batch endorsement upload with CSV/JSON parsing, validation, error handling, and Kafka publishing | - |
 | T035 | Callback API - Insurer notifications | Pending | Implement POST /api/v1/webhooks/insurers/{insurer_id}/notify endpoint with HMAC verification | Webhook endpoint for insurer callbacks | - |
 | T036 | Callback API - Batch notifications | Pending | Implement POST /api/v1/webhooks/insurers/{insurer_id}/batch-notify endpoint | Batch webhook endpoint | - |
-| T037 | Ledger API - Balance | Pending | Implement GET /api/v1/ledger/balance endpoint with pagination | Account balance retrieval | - |
-| T038 | Ledger API - Top-up | Pending | Implement POST /api/v1/ledger/topup endpoint | Account top-up endpoint | - |
-| T039 | Ledger API - History | Pending | Implement GET /api/v1/ledger/history endpoint with pagination | Transaction history endpoint | - |
+| T037 | Ledger API - Balance | Completed | Implement GET /api/v1/ledger/balance endpoint with pagination | Ledger balance listing with locked funds, low-balance status, and tenant scoping | - |
+| T038 | Ledger API - Top-up | Completed | Implement POST /api/v1/ledger/topup endpoint | Credit employer endorsement accounts and emit ledger transactions | - |
+| T039 | Ledger API - History | Completed | Implement GET /api/v1/ledger/history endpoint with pagination | Paginated ledger transaction history scoped to the requesting employer | - |
 | T040 | WebSocket endpoint | Pending | Implement WebSocket endpoint for real-time notifications | Real-time notification support | - |
 
 ### Phase 7: Event-Driven Components
@@ -123,10 +123,11 @@ This document tracks the implementation progress of the Endorsement Management S
 ## Progress Summary
 
 - **Total Tasks**: 70
-- **Completed**: 39
+- **Completed**: 49
 - **In Progress**: 0
-- **Pending**: 31
-- **Completion**: 55.7%
+- **Pending**: 20
+- **Skipped**: 1
+- **Completion**: 70.0%
 
 ## Recent Updates
 
@@ -146,6 +147,7 @@ This document tracks the implementation progress of the Endorsement Management S
   - Simplified `smart_scheduler_handler` to parse batches, sort them in-memory by `RequestPriority`, and hand off batching to the BulkConsumer instead of relying on Redis windows.
   - Updated Kafka publishing code to use the synchronous `KafkaProducer.produce` method (removed the residual `await`) to avoid `NoneType` awaitable errors when sending ingestion events.
   - Added a `ledger-worker` container that runs `ledger_handler` on `ledger.check_funds`, emits `funds.locked`, and keeps the ledger workflow decoupled from the API service.
+  - Added ledger balance, top-up, and history endpoints (T037-T039) with pagination, tenant scoping, and ledger metrics updates.
   - Added an `orchestration-worker` container that reuses the Kafka consumer entrypoint with `KAFKA_IN_TOPICS=endorsement.prioritized,funds.locked,insurer.success` and `ENABLED_HANDLERS=orchestrator_handler` so the orchestrator workflow runs with the same consumer infrastructure.
 
 
