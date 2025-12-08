@@ -5,7 +5,7 @@ This document tracks the implementation progress of the Endorsement Management S
 ## Overview
 - **Project**: Endorsement Management System for Group Insurance
 - **Status**: Implementation In Progress
-- **Last Updated**: 2025-01-27
+- **Last Updated**: 2025-12-08
 - **Python Version**: 3.12-3.13 (downgraded from 3.14 for stability)
 
 ## Implementation Tasks
@@ -53,7 +53,7 @@ This document tracks the implementation progress of the Endorsement Management S
 |---------|-----------|--------|--------|-----------------|-------------|
 | T023 | Validation Service | Completed | Implement validation service with schema validation, business rules, duplicate detection (SHA-256 hash), and tracking ID assignment | Validation service implemented with Redis-based duplicate detection (24h TTL). Integrated into ingestion endpoints. | - |
 | T024 | EA Ledger Service | Pending | Implement ledger service with balance checks, fund locking, ACID transactions, insufficient funds handling | Financial operations with locking | - |
-| T025 | Smart Scheduler Service | Completed | Implement scheduler service that prioritizes credits before debits, groups by insurer, uses tumbling windows | Implemented Redis-based tumbling window buffer and prioritization logic (Credits/Deletions first). | - |
+| T025 | Smart Scheduler Service | Completed | Implement scheduler service that prioritizes credits before debits, groups by insurer, uses tumbling windows | Implemented Redis-based tumbling window buffer and prioritization logic (Credits/Deletions first). Handler now performs in-memory prioritization and leaves batching to the BulkConsumer. | - |
 | T026 | Endorsement Orchestrator Service | Pending | Implement orchestrator with state machine (RECEIVED -> VALIDATED -> FUND_LOCKED -> SENT -> CONFIRMED -> ACTIVE), retry logic with exponential backoff | State machine and workflow management | - |
 | T027 | Insurer Gateway Service | Pending | Implement polymorphic adapter for different insurer protocols (REST, SOAP, SFTP), idempotency key generation, request/response logging to MongoDB | Multi-protocol insurer integration | - |
 | T028 | Analytics Service | Pending | Implement analytics service with anomaly detection (circuit breaker on velocity spikes), pattern analysis, and cash flow prediction | Anomaly detection and predictions | - |
@@ -130,7 +130,7 @@ This document tracks the implementation progress of the Endorsement Management S
 
 ## Recent Updates
 
-- **2025-01-27**: 
+ - **2025-01-27**: 
   - Implemented ingestion API endpoints (T033, T034) with single and batch endorsement creation
   - Added support for default policy configuration from employer config
   - Fixed PostgreSQL adapter to use AsyncAdaptedQueuePool and added close_session method
@@ -141,6 +141,10 @@ This document tracks the implementation progress of the Endorsement Management S
   - Implemented Validation Service (T023) with duplicate detection using Redis
   - Skipped T041 (Validation Consumer) as validation is synchronous
   - Implemented Smart Scheduler Service (T025) and Ingestion Consumer (T042) for prioritization and batching
+
+- **2025-12-08**:
+  - Simplified `smart_scheduler_handler` to parse batches, sort them in-memory by `RequestPriority`, and hand off batching to the BulkConsumer instead of relying on Redis windows.
+  - Updated Kafka publishing code to use the synchronous `KafkaProducer.produce` method (removed the residual `await`) to avoid `NoneType` awaitable errors when sending ingestion events.
 
 
 ## Notes
