@@ -100,6 +100,24 @@ services:
     networks:
       - ems-network
 
+  # Kafdrop - Kafka UI
+  kafdrop:
+    image: obsidiandynamics/kafdrop:4.0.1
+    platform: linux/amd64
+    container_name: ems-kafdrop
+    restart: "no"
+    ports:
+      - "9000:9000"
+    environment:
+      KAFKA_BROKERCONNECT: "kafka:9094"
+      JVM_OPTS: "-Xms32M -Xmx64M"
+      SERVER_SERVLET_CONTEXTPATH: "/"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - ems-network
+
   # Application
   app:
     build:
@@ -145,6 +163,32 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+      - ems-network
+
+  # Scheduler Worker
+  scheduler-worker:
+    build:
+      context: ../..
+      dockerfile: build/Dockerfile
+    container_name: ems-scheduler-worker
+    depends_on:
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      ENVIRONMENT: local
+      PYTHONPATH: /app
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9094
+      SECRET_KEY: local-secret-key-change-in-production
+      HMAC_SECRET_KEY: local-hmac-secret-key-change-in-production
+    # Command to run the worker script
+    command: watchfiles 'python -m app.core.adapter.kafka' ./app
+    volumes:
+      - ../../app:/app/app
     networks:
       - ems-network
 
