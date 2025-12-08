@@ -99,7 +99,7 @@ This document tracks the implementation progress of the Endorsement Management S
 | Task ID | Task Name | Status | Prompt | Outcome Summary | Commit Hash |
 |---------|-----------|--------|--------|-----------------|-------------|
 | T054 | Docker setup | Completed | Create Dockerfile for application and docker-compose.yml for local development with all services (Postgres, MongoDB, Redis, Kafka) | Containerized development environment with KRaft mode Kafka (no Zookeeper), custom Postgres user/db | - |
-| T055 | Environment configuration | Pending | Create .env.example and environment-specific configurations for local, staging, production | Environment configuration management | - |
+| T055 | Environment configuration | Completed | Create .env.example and environment-specific configurations for local, staging, production | Added `env_configs/env.example` plus local/staging/production overrides and updated README guidance | - |
 | T056 | Database migration scripts | Pending | Create scripts for running migrations and seeding initial data | Database setup automation | - |
 | T057 | Monitoring and dashboards | Pending | Set up Grafana dashboards for Prometheus metrics and log aggregation | Observability dashboards | - |
 | T058 | Documentation | Pending | Create API documentation, deployment guides, and operational runbooks | Complete project documentation | - |
@@ -123,9 +123,9 @@ This document tracks the implementation progress of the Endorsement Management S
 ## Progress Summary
 
 - **Total Tasks**: 70
-- **Completed**: 50
+- **Completed**: 51
 - **In Progress**: 0
-- **Pending**: 19
+- **Pending**: 18
 - **Skipped**: 1
 - **Completion**: 70.0%
 
@@ -153,6 +153,9 @@ This document tracks the implementation progress of the Endorsement Management S
 - **2025-12-12**:
   - Completed T045 by wiring a strategy-driven `InsurerGatewayService`/HTTP strategy into a new handler and Docker worker that consumes `insurer.request`/`insurer.request.retry`.
   - Added `INSURER_GATEWAY_CONFIG` entries for insurers A/B/C, refreshed the test dataset, and ensured Mongo adapter sessions satisfy the new gateway’s audit logging requirements.
+
+- **2025-12-14**:
+  - Closed T055 by adding `env_configs/env.example` plus local/staging/production overrides and updating the README instructions so developers know how to seed `.env`.
 
 
 ## Notes

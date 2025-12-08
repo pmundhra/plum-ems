@@ -78,7 +78,8 @@ build/
    uv pip install -e ".[dev]"  # For development dependencies
    ```
 
-4. Set up environment variables (see `.env.example`)
+4. Set up environment variables:
+   - copy `env_configs/env.example` to `.env` or build one from the stage-specific files in `env_configs/` (`local.env`, `staging.env`, `production.env`)
 
 5. Run database migrations:
    ```bash
