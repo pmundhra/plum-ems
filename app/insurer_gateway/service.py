@@ -322,7 +322,14 @@ class InsurerGatewayService:
             headers.setdefault("employer_id", str(employer_id))
         retry_count = kafka_payload.get("retry_count", 0)
         headers.setdefault(
-            "X-Idempotency-Key", f"{endorsement_id}-{insurer_id}-{retry_count}"
+            "X-Idempotency-Key",
+            self._build_idempotency_key(
+                endorsement_id,
+                employer_id,
+                insurer_id,
+                kafka_payload.get("type"),
+                retry_count,
+            ),
         )
         return headers
 
@@ -339,6 +346,27 @@ class InsurerGatewayService:
             headers=self._sanitize_headers(headers),
             body=self._mask_sensitive_data(body),
         )
+
+    def _build_idempotency_key(
+        self,
+        endorsement_id: str,
+        employer_id: str | None,
+        insurer_id: str,
+        request_type: str | None,
+        retry_count: int,
+    ) -> str:
+        """
+        Generate a deterministic idempotency key so retries can be deduplicated.
+        """
+        seed_parts = [
+            insurer_id,
+            endorsement_id,
+            employer_id or "unknown-employer",
+            (request_type or "UNKNOWN").upper(),
+        ]
+        if retry_count:
+            seed_parts.append(f"retry-{retry_count}")
+        return "|".join(seed_parts)
 
     def _build_response_snapshot(self, response: httpx.Response | None) -> AuditLogResponse | None:
         if not response:
