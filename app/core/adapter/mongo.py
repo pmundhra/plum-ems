@@ -189,6 +189,21 @@ class MongoAdapter(MongoAdapterBase):
         results = await cursor.to_list(length=effective_limit)
         return results
 
+    async def get_session(self) -> AsyncIOMotorClient:
+        """
+        Return the underlying Mongo client for session-like APIs.
+        """
+        if not self._client:
+            raise RuntimeError("MongoDB not connected. Call connect() first.")
+
+        return self._client
+
+    async def close_session(self, session: AsyncIOMotorClient) -> None:
+        """
+        Close a session if needed. Mongo client does not require per-operation cleanup.
+        """
+        # Motor manages its own sessions; no-op to satisfy interface.
+        return
 
 # Global adapter instance
 _mongo_adapter: MongoAdapter | None = None
