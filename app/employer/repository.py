@@ -2,8 +2,8 @@
 
 from typing import Any
 
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, update
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.base.repository import BaseRepository
 from app.employer.model import Employer
@@ -27,6 +27,14 @@ class EmployerRepository(BaseRepository[Employer]):
             Employer instance or None if not found
         """
         query = select(self.model).where(self.model.id == id)
+        result = await self.session.execute(query)
+        return result.scalar_one_or_none()
+
+    async def get_by_id_for_update(self, id: str) -> Employer | None:
+        """
+        Lock the employer row using FOR UPDATE to ensure ACID balance adjustments.
+        """
+        query = select(self.model).where(self.model.id == id).with_for_update()
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
 

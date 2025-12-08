@@ -45,7 +45,7 @@ class LedgerService:
 
         async with self._postgres.get_session() as session:
             employer_repo = EmployerRepository(session)
-            employer = await employer_repo.get_by_id_unscoped(employer_id)
+            employer = await employer_repo.get_by_id_for_update(employer_id)
 
             if not employer:
                 logger.error(
