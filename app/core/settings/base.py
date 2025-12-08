@@ -2,8 +2,18 @@
 
 from decimal import Decimal
 from typing import Literal
-from pydantic import Field
+from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class InsurerGatewayConfigEntry(BaseModel):
+    """Insurer endpoint configuration for the gateway."""
+
+    url: str
+    method: Literal["GET", "POST", "PUT", "PATCH", "DELETE"] = "POST"
+    protocol: Literal["REST_API", "SOAP_XML", "SFTP_BATCH"] = "REST_API"
+    headers: dict[str, str] = Field(default_factory=dict)
+    timeout_seconds: int | None = None
 
 
 class BaseAppSettings(BaseSettings):
@@ -163,6 +173,40 @@ class BaseAppSettings(BaseSettings):
     # Insurer Gateway
     INSURER_REQUEST_TIMEOUT_SECONDS: int = 30
     INSURER_MAX_RETRIES: int = 3
+    INSURER_GATEWAY_CONFIG: dict[str, InsurerGatewayConfigEntry] = Field(
+        default_factory=lambda: {
+            "INSURER_A": InsurerGatewayConfigEntry(
+                url=f"http://localhost:8000/live",
+                method="GET",
+                protocol="REST_API",
+                headers={
+                    "Content-Type": "application/json",
+                    "X-Api-Key": "insurer-a-key",
+                },
+                timeout_seconds=30,
+            ),
+            "INSURER_B": InsurerGatewayConfigEntry(
+                url="http://localhost:8000/live",
+                method="GET",
+                protocol="REST_API",
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer insurer-b-token",
+                },
+                timeout_seconds=45,
+            ),
+            "INSURER_C": InsurerGatewayConfigEntry(
+                url="http://localhost:8000/live",
+                method="GET",
+                protocol="REST_API",
+                headers={
+                    "Content-Type": "application/json",
+                },
+                timeout_seconds=60,
+            ),
+        },
+        description="Map of insurer_id to HTTP endpoint configuration",
+    )
 
     # Analytics
     ANALYTICS_ANOMALY_THRESHOLD_MULTIPLIER: float = 3.0  # 3x standard deviation

@@ -218,6 +218,28 @@ services:
     networks:
       - ems-network
 
+  insurer-gw-worker:
+    build:
+      context: ../..
+      dockerfile: build/Dockerfile
+    container_name: ems-insurer-gw-worker
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      KAFKA_IN_TOPICS: insurer.request,insurer.request.retry
+      ENABLED_HANDLERS: insurer_gateway_handler
+      KAFKA_CONSUMER_GROUP_ID: insurer-gateway-group
+    command: watchfiles 'python -m app.core.adapter.kafka' ./app
+    volumes:
+      - ../../app:/app/app
+    networks:
+      - ems-network
+
 volumes:
   postgres_data:
   mongodb_data:
