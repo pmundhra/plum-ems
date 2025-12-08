@@ -15,5 +15,8 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
         Async database session
     """
     adapter = get_postgres_adapter()
+    # Ensure adapter is connected
+    if not adapter.is_connected:
+        await adapter.connect()
     async with adapter.get_session() as session:
         yield session

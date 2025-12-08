@@ -9,7 +9,6 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
     async_sessionmaker,
 )
-from sqlalchemy.pool import NullPool, QueuePool
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import text
 
@@ -37,9 +36,9 @@ class PostgresAdapter(PostgresAdapterBase):
 
         try:
             # Create async engine with connection pooling
+            # Note: AsyncAdaptedQueuePool is used by default for async engines
             self._engine = create_async_engine(
                 settings.postgres_url,
-                poolclass=QueuePool,
                 pool_size=settings.POSTGRES_POOL_SIZE,
                 max_overflow=settings.POSTGRES_MAX_OVERFLOW,
                 pool_pre_ping=True,  # Verify connections before using
@@ -118,6 +117,19 @@ class PostgresAdapter(PostgresAdapterBase):
             except Exception:
                 await session.rollback()
                 raise
+
+    async def close_session(self, session: AsyncSession) -> None:
+        """
+        Close a database session.
+
+        Note: When using get_session() as a context manager, sessions are
+        automatically closed. This method is provided to satisfy the abstract
+        method requirement and can be used for manual session management.
+
+        Args:
+            session: The session to close
+        """
+        await session.close()
 
     async def execute_query(
         self, query: str, params: dict[str, Any] | None = None
