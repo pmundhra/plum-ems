@@ -6,6 +6,9 @@ from sqlalchemy import String, ForeignKey
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.employer import model as employer_model  # noqa: F401
+from app.policy_coverage import model as policy_coverage_model  # noqa: F401
+
 from app.core.database import Base
 
 

@@ -8,6 +8,9 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
+from app.employee import model as employee_model  # noqa: F401
+from app.endorsement_request import model as endorsement_request_model  # noqa: F401
+from app.ledger_transaction import model as ledger_transaction_model  # noqa: F401
 
 
 class Employer(Base):

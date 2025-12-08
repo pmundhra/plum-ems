@@ -6,6 +6,8 @@ from sqlalchemy import String, Numeric, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
+from app.employer import model as employer_model  # noqa: F401
+from app.endorsement_request import model as endorsement_request_model  # noqa: F401
 
 
 class LedgerTransaction(Base):

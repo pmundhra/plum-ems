@@ -3,6 +3,9 @@
 from datetime import date
 from typing import Any
 
+from app.employer import model as employer_model  # noqa: F401
+from app.ledger_transaction import model as ledger_transaction_model  # noqa: F401
+
 from sqlalchemy import String, Integer, Date, ForeignKey
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
