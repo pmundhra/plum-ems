@@ -7,12 +7,21 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 
+class DefaultPolicyConfig(BaseModel):
+    """Default policy configuration for employer"""
+
+    insurer_id: str = Field(..., description="Default Insurer ID")
+    plan_id: str = Field(..., description="Default Plan ID")
+    tier: str = Field(..., description="Default Coverage tier")
+
+
 class EmployerConfig(BaseModel):
     """Employer configuration schema"""
 
     low_balance_threshold: float = Field(..., description="Low balance alert threshold")
     notification_email: str | None = Field(None, description="Email for notifications")
     allowed_overdraft: bool = Field(default=False, description="Whether overdraft is allowed")
+    default_policy: DefaultPolicyConfig | None = Field(None, description="Default policy configuration")
 
     class Config:
         json_schema_extra = {
@@ -20,6 +29,11 @@ class EmployerConfig(BaseModel):
                 "low_balance_threshold": 1000.00,
                 "notification_email": "finance@abc.xyz",
                 "allowed_overdraft": False,
+                "default_policy": {
+                    "insurer_id": "AETNA_01",
+                    "plan_id": "PLAN_GOLD_001",
+                    "tier": "EMPLOYEE_ONLY"
+                }
             }
         }
 
@@ -41,6 +55,11 @@ class EmployerCreateRequest(BaseModel):
                     "low_balance_threshold": 1000.00,
                     "notification_email": "finance@acme.com",
                     "allowed_overdraft": False,
+                    "default_policy": {
+                        "insurer_id": "AETNA_01",
+                        "plan_id": "PLAN_GOLD_001",
+                        "tier": "EMPLOYEE_ONLY"
+                    }
                 },
                 "status": "ACTIVE",
             }
@@ -77,6 +96,11 @@ class EmployerResponse(BaseModel):
                     "low_balance_threshold": 1000.00,
                     "notification_email": "finance@acme.com",
                     "allowed_overdraft": False,
+                    "default_policy": {
+                        "insurer_id": "AETNA_01",
+                        "plan_id": "PLAN_GOLD_001",
+                        "tier": "EMPLOYEE_ONLY"
+                    }
                 },
                 "status": "ACTIVE",
                 "created_at": "2025-01-27T10:00:00Z",

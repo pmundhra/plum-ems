@@ -33,7 +33,7 @@ class EndorsementCreateRequest(BaseModel):
     request_type: str = Field(..., description="Endorsement type: ADDITION, DELETION, MODIFICATION")
     effective_date: date = Field(..., description="The 'No Gap' effective date")
     employee: EmployeeData = Field(..., description="Employee information")
-    coverage: CoverageData | None = Field(None, description="Coverage details (required for ADDITION)")
+    coverage: CoverageData | None = Field(None, description="Coverage details (required for ADDITION if no default policy)")
     metadata: dict[str, Any] | None = Field(None, description="Additional metadata")
 
     class Config:
@@ -50,6 +50,7 @@ class EndorsementCreateRequest(BaseModel):
                     "gender": "M",
                     "email": "john.doe@company.com",
                 },
+                # Coverage is optional if employer has default policy
                 "coverage": {
                     "plan_id": "PLAN_GOLD_001",
                     "tier": "EMPLOYEE_ONLY",
