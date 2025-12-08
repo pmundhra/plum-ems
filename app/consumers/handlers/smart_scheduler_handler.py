@@ -5,7 +5,9 @@ from typing import Any, List, Dict, Optional
 
 from confluent_kafka import Message
 
+from app.core.adapter.kafka import get_kafka_producer
 from app.core.base.handlers import MessageHandler, InterimOutput, handler
+from app.core.settings import settings
 from app.endorsement_request.service import RequestPriority
 from app.utils.logger import get_logger
 
@@ -18,6 +20,9 @@ class SmartSchedulerHandler(MessageHandler):
     Handler for endorsement ingestion events.
     Sorts requests by priority before handing the batch to the next stage.
     """
+
+    def __init__(self) -> None:
+        self._producer = get_kafka_producer()
 
     async def handle(self, message: Message, interim_output: InterimOutput) -> InterimOutput:
         """
@@ -55,6 +60,8 @@ class SmartSchedulerHandler(MessageHandler):
         sorted_requests = sorted(parsed_payloads, key=self._get_priority)
         interim_output.data.setdefault("sorted_requests", []).extend(sorted_requests)
 
+        self._publish_sorted_requests(sorted_requests)
+
         logger.debug(
             "smart_scheduler_sorted_batch",
             count=len(sorted_requests),
@@ -83,3 +90,33 @@ class SmartSchedulerHandler(MessageHandler):
         if rtype == "ADDITION":
             return RequestPriority.ADDITION
         return max(RequestPriority) + 1
+
+    def _publish_sorted_requests(self, sorted_requests: List[Dict[str, Any]]) -> None:
+        """
+        Publish the ordered requests to the prioritized Kafka topic.
+        """
+        for payload in sorted_requests:
+            try:
+                trace_id = payload.get("trace_id") or "smart-scheduler"
+                employer_id = payload.get("employer_id")
+                endorsement_id = payload.get("endorsement_id")
+
+                headers = {
+                    "trace_id": str(trace_id),
+                    "source": "smart_scheduler_handler",
+                }
+                if employer_id is not None:
+                    headers["employer_id"] = str(employer_id)
+
+                self._producer.produce(
+                    topic=settings.KAFKA_TOPIC_PRIORITIZED,
+                    value=payload,
+                    key=str(endorsement_id) if endorsement_id is not None else None,
+                    headers=headers,
+                )
+            except Exception as exc:
+                logger.error(
+                    "smart_scheduler_publish_error",
+                    error=str(exc),
+                    endorsement_id=payload.get("endorsement_id"),
+                )
