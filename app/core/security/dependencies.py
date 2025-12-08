@@ -8,17 +8,15 @@ from app.core.exceptions import ForbiddenError
 from app.core.security.jwt import get_current_user
 
 
-async def get_employer_id_from_user(
-    current_user: dict[str, Any] = Depends(get_current_user),
-) -> str:
+def get_employer_id_from_user(current_user: dict[str, Any]) -> str:
     """
-    FastAPI dependency to extract employer_id from authenticated user context.
+    Extract employer_id from authenticated user context.
     
     This ensures all employee operations are scoped to the user's employer,
     preventing cross-employer data access.
     
     Args:
-        current_user: Authenticated user from JWT token
+        current_user: Authenticated user from JWT token (already validated)
         
     Returns:
         Employer ID from user context

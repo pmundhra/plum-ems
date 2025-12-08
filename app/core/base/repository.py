@@ -25,20 +25,40 @@ class BaseRepository(Generic[ModelType]):
         self.model = model
         self.session = session
 
+    def _apply_employer_scope(self, query: Any, employer_id: str) -> Any:
+        """
+        Apply employer_id scope to query.
+
+        Args:
+            query: SQLAlchemy query object
+            employer_id: Employer ID to scope by
+
+        Returns:
+            Query with employer scope applied
+        """
+        if hasattr(self.model, "employer_id"):
+            query = query.where(self.model.employer_id == employer_id)
+        return query
+
     async def get_by_id(
-        self, id: str, load_relationships: list[str] | None = None
+        self,
+        id: str,
+        employer_id: str,
+        load_relationships: list[str] | None = None,
     ) -> Optional[ModelType]:
         """
-        Get a record by ID.
+        Get a record by ID, scoped by employer_id.
 
         Args:
             id: Record ID
+            employer_id: Employer ID to scope by (required)
             load_relationships: Optional list of relationship names to eager load
 
         Returns:
             Model instance or None if not found
         """
         query = select(self.model).where(self.model.id == id)
+        query = self._apply_employer_scope(query, employer_id)
 
         if load_relationships:
             for rel in load_relationships:
@@ -49,14 +69,16 @@ class BaseRepository(Generic[ModelType]):
 
     async def get_all(
         self,
+        employer_id: str,
         skip: int = 0,
         limit: int = 100,
         load_relationships: list[str] | None = None,
     ) -> list[ModelType]:
         """
-        Get all records with pagination.
+        Get all records with pagination, scoped by employer_id.
 
         Args:
+            employer_id: Employer ID to scope by (required)
             skip: Number of records to skip
             limit: Maximum number of records to return
             load_relationships: Optional list of relationship names to eager load
@@ -64,7 +86,9 @@ class BaseRepository(Generic[ModelType]):
         Returns:
             List of model instances
         """
-        query = select(self.model).offset(skip).limit(limit)
+        query = select(self.model)
+        query = self._apply_employer_scope(query, employer_id)
+        query = query.offset(skip).limit(limit)
 
         if load_relationships:
             for rel in load_relationships:
@@ -89,38 +113,46 @@ class BaseRepository(Generic[ModelType]):
         await self.session.refresh(instance)
         return instance
 
-    async def update(self, id: str, **kwargs: Any) -> Optional[ModelType]:
+    async def update(
+        self, id: str, employer_id: str, **kwargs: Any
+    ) -> Optional[ModelType]:
         """
-        Update a record by ID.
+        Update a record by ID, scoped by employer_id.
 
         Args:
             id: Record ID
+            employer_id: Employer ID to scope by (required)
             **kwargs: Attributes to update
 
         Returns:
             Updated model instance or None if not found
         """
+        where_clause = self.model.id == id
+        if hasattr(self.model, "employer_id"):
+            where_clause = where_clause & (self.model.employer_id == employer_id)
+
         stmt = (
             update(self.model)
-            .where(self.model.id == id)
+            .where(where_clause)
             .values(**kwargs)
             .execution_options(synchronize_session="fetch")
         )
         await self.session.execute(stmt)
         await self.session.flush()
-        return await self.get_by_id(id)
+        return await self.get_by_id(id, employer_id=employer_id)
 
-    async def delete(self, id: str) -> bool:
+    async def delete(self, id: str, employer_id: str) -> bool:
         """
-        Delete a record by ID.
+        Delete a record by ID, scoped by employer_id.
 
         Args:
             id: Record ID
+            employer_id: Employer ID to scope by (required)
 
         Returns:
             True if deleted, False if not found
         """
-        instance = await self.get_by_id(id)
+        instance = await self.get_by_id(id, employer_id=employer_id)
         if not instance:
             return False
 
@@ -128,17 +160,19 @@ class BaseRepository(Generic[ModelType]):
         await self.session.flush()
         return True
 
-    async def count(self, **filters: Any) -> int:
+    async def count(self, employer_id: str, **filters: Any) -> int:
         """
-        Count records matching filters.
+        Count records matching filters, scoped by employer_id.
 
         Args:
+            employer_id: Employer ID to scope by (required)
             **filters: Filter criteria (attribute=value)
 
         Returns:
             Count of matching records
         """
         query = select(self.model)
+        query = self._apply_employer_scope(query, employer_id)
 
         for attr, value in filters.items():
             if hasattr(self.model, attr):
@@ -149,15 +183,16 @@ class BaseRepository(Generic[ModelType]):
         result = await self.session.execute(count_query)
         return result.scalar() or 0
 
-    async def exists(self, id: str) -> bool:
+    async def exists(self, id: str, employer_id: str) -> bool:
         """
-        Check if a record exists.
+        Check if a record exists, scoped by employer_id.
 
         Args:
             id: Record ID
+            employer_id: Employer ID to scope by (required)
 
         Returns:
             True if exists, False otherwise
         """
-        instance = await self.get_by_id(id)
+        instance = await self.get_by_id(id, employer_id=employer_id)
         return instance is not None
