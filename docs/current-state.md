@@ -51,9 +51,9 @@ This document tracks the implementation progress of the Endorsement Management S
 ### Phase 5: Business Logic - Services
 | Task ID | Task Name | Status | Prompt | Outcome Summary | Commit Hash |
 |---------|-----------|--------|--------|-----------------|-------------|
-| T023 | Validation Service | Pending | Implement validation service with schema validation, business rules, duplicate detection (SHA-256 hash), and tracking ID assignment | Request validation with duplicate detection | - |
+| T023 | Validation Service | Completed | Implement validation service with schema validation, business rules, duplicate detection (SHA-256 hash), and tracking ID assignment | Validation service implemented with Redis-based duplicate detection (24h TTL). Integrated into ingestion endpoints. | - |
 | T024 | EA Ledger Service | Pending | Implement ledger service with balance checks, fund locking, ACID transactions, insufficient funds handling | Financial operations with locking | - |
-| T025 | Smart Scheduler Service | Pending | Implement scheduler service that prioritizes credits before debits, groups by insurer, uses tumbling windows | Transaction prioritization and batching | - |
+| T025 | Smart Scheduler Service | Completed | Implement scheduler service that prioritizes credits before debits, groups by insurer, uses tumbling windows | Implemented Redis-based tumbling window buffer and prioritization logic (Credits/Deletions first). | - |
 | T026 | Endorsement Orchestrator Service | Pending | Implement orchestrator with state machine (RECEIVED -> VALIDATED -> FUND_LOCKED -> SENT -> CONFIRMED -> ACTIVE), retry logic with exponential backoff | State machine and workflow management | - |
 | T027 | Insurer Gateway Service | Pending | Implement polymorphic adapter for different insurer protocols (REST, SOAP, SFTP), idempotency key generation, request/response logging to MongoDB | Multi-protocol insurer integration | - |
 | T028 | Analytics Service | Pending | Implement analytics service with anomaly detection (circuit breaker on velocity spikes), pattern analysis, and cash flow prediction | Anomaly detection and predictions | - |
@@ -77,8 +77,8 @@ This document tracks the implementation progress of the Endorsement Management S
 ### Phase 7: Event-Driven Components
 | Task ID | Task Name | Status | Prompt | Outcome Summary | Commit Hash |
 |---------|-----------|--------|--------|-----------------|-------------|
-| T041 | Kafka consumer - Validation | Pending | Create Kafka consumer for endorsement.ingested topic, calls validation service, produces to next topic | Validation event consumer | - |
-| T042 | Kafka consumer - Smart Scheduler | Pending | Create Kafka consumer that reorders endorsements, groups by insurer, produces to endorsement.ready_process | Scheduler event consumer | - |
+| T041 | Kafka consumer - Validation | Skipped | Create Kafka consumer for endorsement.ingested topic, calls validation service, produces to next topic | Redundant: Validation is performed synchronously by the Ingestion API. | - |
+| T042 | Kafka consumer - Smart Scheduler | Completed | Create Kafka consumer that reorders endorsements, groups by insurer, produces to endorsement.ready_process | Implemented IngestionConsumer that buffers requests and triggers SmartScheduler processing. | - |
 | T043 | Kafka consumer - Orchestrator | Pending | Create Kafka consumer for endorsement workflow, coordinates with ledger and insurer gateway | Orchestrator event consumer | - |
 | T044 | Kafka consumer - Ledger | Pending | Create Kafka consumer for ledger.check_funds events, handles fund locking | Ledger event consumer | - |
 | T045 | Kafka consumer - Insurer Gateway | Pending | Create Kafka consumer that sends requests to insurers and handles responses | Insurer gateway consumer | - |
@@ -123,10 +123,10 @@ This document tracks the implementation progress of the Endorsement Management S
 ## Progress Summary
 
 - **Total Tasks**: 70
-- **Completed**: 35
+- **Completed**: 38
 - **In Progress**: 0
-- **Pending**: 35
-- **Completion**: 50.0%
+- **Pending**: 32
+- **Completion**: 54.3%
 
 ## Recent Updates
 
@@ -138,6 +138,10 @@ This document tracks the implementation progress of the Endorsement Management S
   - Downgraded Python version requirement from 3.14 to 3.12-3.13 for better stability and library compatibility
   - Cleaned up JWT security code, removing Python 3.14 compatibility workarounds
   - Added model imports in main.py for SQLAlchemy relationship resolution
+  - Implemented Validation Service (T023) with duplicate detection using Redis
+  - Skipped T041 (Validation Consumer) as validation is synchronous
+  - Implemented Smart Scheduler Service (T025) and Ingestion Consumer (T042) for prioritization and batching
+
 
 ## Notes
 
