@@ -10,6 +10,8 @@ from app.core.dependencies import get_db_session
 from app.core.exceptions import ForbiddenError, ResourceNotFoundError, ValidationError
 from app.core.security.dependencies import get_employer_id_from_user
 from app.core.security.jwt import get_current_user
+from app.core.service.validation import ValidationService
+from app.core.settings import settings
 from app.endorsement_request.model import EndorsementRequest
 from app.endorsement_request.repository import EndorsementRequestRepository
 from app.endorsement_request.schema import (
@@ -27,9 +29,6 @@ from app.core.adapter.kafka import get_kafka_producer
 logger = get_logger(__name__)
 
 router = APIRouter(prefix="/endorsements", tags=["Endorsements v1"])
-
-# Kafka topic for ingested endorsements
-KAFKA_TOPIC_INGESTED = "endorsement.ingested"
 
 
 def validate_endorsement_request(
@@ -128,6 +127,10 @@ async def create_endorsement(
     if request.request_type == "ADDITION" and not request.coverage and default_policy:
         payload["coverage"] = default_policy
 
+    # Check for duplicate request
+    validation_service = ValidationService()
+    await validation_service.check_duplicate(employer_id, payload)
+
     # Create endorsement request
     endorsement_repo = EndorsementRequestRepository(session)
     endorsement = await endorsement_repo.create(
@@ -162,8 +165,8 @@ async def create_endorsement(
             "trace_id": trace_id,
             "payload": payload,
         }
-        await kafka_producer.produce(
-            topic=KAFKA_TOPIC_INGESTED,
+        kafka_producer.produce(
+            topic=settings.KAFKA_TOPIC_INGESTED,
             value=kafka_message,
             key=endorsement.id,  # Use endorsement ID as key for partitioning
             headers={"trace_id": trace_id, "employer_id": employer_id},
@@ -171,7 +174,7 @@ async def create_endorsement(
         logger.info(
             "endorsement_published_to_kafka",
             endorsement_id=endorsement.id,
-            topic=KAFKA_TOPIC_INGESTED,
+            topic=settings.KAFKA_TOPIC_INGESTED,
             trace_id=trace_id,
         )
     except Exception as e:
@@ -397,6 +400,7 @@ async def batch_upload_endorsements(
     endorsement_repo = EndorsementRequestRepository(session)
     created_endorsements: list[EndorsementRequest] = []
     kafka_producer = get_kafka_producer()
+    validation_service = ValidationService()
 
     for req in endorsement_requests:
         try:
@@ -406,6 +410,9 @@ async def batch_upload_endorsements(
             # If coverage is missing for ADDITION and we have default policy, populate it in payload
             if req.request_type == "ADDITION" and not req.coverage and default_policy:
                 payload["coverage"] = default_policy
+
+            # Check for duplicate request
+            await validation_service.check_duplicate(employer_id, payload)
 
             endorsement = await endorsement_repo.create(
                 employer_id=employer_id,
@@ -428,8 +435,8 @@ async def batch_upload_endorsements(
                     "trace_id": trace_id,
                     "payload": payload,
                 }
-                await kafka_producer.produce(
-                    topic=KAFKA_TOPIC_INGESTED,
+                kafka_producer.produce(
+                    topic=settings.KAFKA_TOPIC_INGESTED,
                     value=kafka_message,
                     key=endorsement.id,
                     headers={"trace_id": trace_id, "employer_id": employer_id},
