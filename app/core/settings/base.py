@@ -105,6 +105,11 @@ class BaseAppSettings(BaseSettings):
     # Kafka Topics
     KAFKA_TOPIC_INGESTED: str = "endorsement.ingested"
     KAFKA_TOPIC_PRIORITIZED: str = "endorsement.prioritized"
+    KAFKA_TOPIC_LEDGER_CHECK_FUNDS: str = "ledger.check_funds"
+    KAFKA_TOPIC_LEDGER_FUNDS_LOCKED: str = "funds.locked"
+    KAFKA_TOPIC_INSURER_REQUEST: str = "insurer.request"
+    KAFKA_TOPIC_INSURER_SUCCESS: str = "insurer.success"
+    KAFKA_TOPIC_ENDORSEMENT_COMPLETED: str = "endorsement.completed"
     
     # Kafka Consumer Configuration
     KAFKA_CONSUMER_MODE: Literal["single", "batch"] = "batch"

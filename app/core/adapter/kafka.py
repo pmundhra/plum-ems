@@ -403,6 +403,7 @@ async def consume_messages():
 if __name__ == "__main__":
     import sys
     from app.core.adapter.redis import init_redis, close_redis
+    from app.core.adapter.postgres import init_postgres, close_postgres
     
     # Check if test connection is requested
     if len(sys.argv) > 1 and sys.argv[1] == "--test-connection":
@@ -435,12 +436,14 @@ if __name__ == "__main__":
         async def main():
             logger.info("Starting Kafka consumer worker")
             await init_redis()
+            await init_postgres()
             import app.consumers.handlers  # noqa: F401
 
             try:
                 await consume_messages()
             finally:
                 await close_redis()
+                await close_postgres()
                 logger.info("Kafka consumer worker stopped")
 
         try:
