@@ -226,6 +226,36 @@ services:
     networks:
       - ems-network
 
+  ledger-worker:
+    build:
+      context: ../..
+      dockerfile: build/Dockerfile
+    container_name: ems-ledger-worker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      ENVIRONMENT: local
+      PYTHONPATH: /app
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: plum
+      POSTGRES_PASSWORD: 0d3983283e3d3bbe7c12e81b4c5f98a6
+      POSTGRES_DB: plum-ems
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9094
+      KAFKA_IN_TOPICS: ledger.check_funds
+      ENABLED_HANDLERS: ledger_handler
+      KAFKA_CONSUMER_GROUP_ID: ledger-group
+      SECRET_KEY: local-secret-key-change-in-production
+      HMAC_SECRET_KEY: local-hmac-secret-key-change-in-production
+    command: watchfiles 'python -m app.core.adapter.kafka' ./app
+    volumes:
+      - ../../app:/app/app
+    networks:
+      - ems-network
+
 volumes:
   postgres_data:
   mongodb_data:

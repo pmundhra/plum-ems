@@ -80,7 +80,7 @@ This document tracks the implementation progress of the Endorsement Management S
 | T041 | Kafka consumer - Validation | Skipped | Create Kafka consumer for endorsement.ingested topic, calls validation service, produces to next topic | Redundant: Validation is performed synchronously by the Ingestion API. | - |
 | T042 | Kafka consumer - Smart Scheduler | Completed | Create Kafka consumer that reorders endorsements, groups by insurer, produces to endorsement.ready_process | Implemented IngestionConsumer that buffers requests and triggers SmartScheduler processing. | - |
 | T043 | Kafka consumer - Orchestrator | Completed | Added orchestrator consumer that updates request status and emits ledger/insurer pipeline events | Orchestrator event consumer | - |
-| T044 | Kafka consumer - Ledger | Pending | Create Kafka consumer for ledger.check_funds events, handles fund locking | Ledger event consumer | - |
+| T044 | Kafka consumer - Ledger | Completed | Added ledger consumer/service that locks funds (or fails) and emits funds.locked events, ready for the insurer pipeline | Ledger event consumer | - |
 | T045 | Kafka consumer - Insurer Gateway | Pending | Create Kafka consumer that sends requests to insurers and handles responses | Insurer gateway consumer | - |
 | T046 | DLQ and retry mechanism | Pending | Implement Dead Letter Queue handling with retry topics and exponential backoff | Error recovery with DLQ | - |
 | T047 | Park and Wake mechanism | Pending | Implement ON_HOLD_FUNDS status handling, park transactions, wake on balance increase | Insufficient funds recovery | - |
@@ -145,6 +145,7 @@ This document tracks the implementation progress of the Endorsement Management S
 - **2025-12-08**:
   - Simplified `smart_scheduler_handler` to parse batches, sort them in-memory by `RequestPriority`, and hand off batching to the BulkConsumer instead of relying on Redis windows.
   - Updated Kafka publishing code to use the synchronous `KafkaProducer.produce` method (removed the residual `await`) to avoid `NoneType` awaitable errors when sending ingestion events.
+  - Added a `ledger-worker` container that runs `ledger_handler` on `ledger.check_funds`, emits `funds.locked`, and keeps the ledger workflow decoupled from the API service.
   - Added an `orchestration-worker` container that reuses the Kafka consumer entrypoint with `KAFKA_IN_TOPICS=endorsement.prioritized,funds.locked,insurer.success` and `ENABLED_HANDLERS=orchestrator_handler` so the orchestrator workflow runs with the same consumer infrastructure.
 
 
