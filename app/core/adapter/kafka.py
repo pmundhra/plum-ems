@@ -404,6 +404,7 @@ if __name__ == "__main__":
     import sys
     from app.core.adapter.redis import init_redis, close_redis
     from app.core.adapter.postgres import init_postgres, close_postgres
+    from app.core.adapter.mongo import init_mongo, close_mongo
     
     # Check if test connection is requested
     if len(sys.argv) > 1 and sys.argv[1] == "--test-connection":
@@ -437,6 +438,7 @@ if __name__ == "__main__":
             logger.info("Starting Kafka consumer worker")
             await init_redis()
             await init_postgres()
+            await init_mongo()
             import app.consumers.handlers  # noqa: F401
 
             try:
@@ -444,6 +446,7 @@ if __name__ == "__main__":
             finally:
                 await close_redis()
                 await close_postgres()
+                await close_mongo()
                 logger.info("Kafka consumer worker stopped")
 
         try:
