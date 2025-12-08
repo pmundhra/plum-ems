@@ -31,9 +31,6 @@ router = APIRouter(prefix="/endorsements", tags=["Endorsements v1"])
 # Kafka topic for ingested endorsements
 KAFKA_TOPIC_INGESTED = "endorsement.ingested"
 
-# Valid endorsement types
-VALID_ENDORSEMENT_TYPES = {"ADDITION", "DELETION", "MODIFICATION"}
-
 
 def validate_endorsement_request(
     request: EndorsementCreateRequest,
@@ -63,16 +60,6 @@ def validate_endorsement_request(
             )
         )
 
-    # Validate request_type
-    if request.request_type not in VALID_ENDORSEMENT_TYPES:
-        errors.append(
-            ErrorDetail(
-                field="request_type",
-                message=f"Invalid request_type. Must be one of: {', '.join(VALID_ENDORSEMENT_TYPES)}",
-                code="INVALID_REQUEST_TYPE",
-            )
-        )
-
     # Validate coverage is required for ADDITION
     if request.request_type == "ADDITION" and not request.coverage and not default_policy:
         errors.append(
@@ -82,18 +69,6 @@ def validate_endorsement_request(
                 code="MISSING_COVERAGE",
             )
         )
-
-    # Validate employee data
-    if request.request_type in {"ADDITION", "MODIFICATION"}:
-        # For additions, either employee_id or employee_code must be provided
-        if not request.employee.employee_id and not request.employee.employee_code:
-            errors.append(
-                ErrorDetail(
-                    field="employee",
-                    message="Either employee_id or employee_code must be provided",
-                    code="MISSING_EMPLOYEE_IDENTIFIER",
-                )
-            )
 
     if errors:
         raise ValidationError(

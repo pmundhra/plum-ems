@@ -1,9 +1,9 @@
 """Endorsement request Pydantic schemas (DTOs)"""
 
 from datetime import date, datetime
-from typing import Any
+from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class EmployeeData(BaseModel):
@@ -30,11 +30,19 @@ class EndorsementCreateRequest(BaseModel):
     """Request schema for creating an endorsement"""
 
     employer_id: str = Field(..., description="Employer ID")
-    request_type: str = Field(..., description="Endorsement type: ADDITION, DELETION, MODIFICATION")
+    request_type: Literal["ADDITION", "DELETION", "MODIFICATION"] = Field(..., description="Endorsement type: ADDITION, DELETION, MODIFICATION")
     effective_date: date = Field(..., description="The 'No Gap' effective date")
     employee: EmployeeData = Field(..., description="Employee information")
     coverage: CoverageData | None = Field(None, description="Coverage details (required for ADDITION if no default policy)")
     metadata: dict[str, Any] | None = Field(None, description="Additional metadata")
+
+    @model_validator(mode='after')
+    def validate_identifiers(self) -> 'EndorsementCreateRequest':
+        """Validate that either employee_id or employee_code is provided"""
+        if self.request_type in {"ADDITION", "MODIFICATION"}:
+            if not self.employee.employee_id and not self.employee.employee_code:
+                raise ValueError("Either employee_id or employee_code must be provided")
+        return self
 
     class Config:
         json_schema_extra = {
