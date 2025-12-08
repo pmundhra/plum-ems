@@ -54,7 +54,7 @@ This document tracks the implementation progress of the Endorsement Management S
 | T023 | Validation Service | Completed | Implement validation service with schema validation, business rules, duplicate detection (SHA-256 hash), and tracking ID assignment | Validation service implemented with Redis-based duplicate detection (24h TTL). Integrated into ingestion endpoints. | - |
 | T024 | EA Ledger Service | Pending | Implement ledger service with balance checks, fund locking, ACID transactions, insufficient funds handling | Financial operations with locking | - |
 | T025 | Smart Scheduler Service | Completed | Implement scheduler service that prioritizes credits before debits, groups by insurer, uses tumbling windows | Implemented Redis-based tumbling window buffer and prioritization logic (Credits/Deletions first). Handler now performs in-memory prioritization and leaves batching to the BulkConsumer. | - |
-| T026 | Endorsement Orchestrator Service | Pending | Implement orchestrator with state machine (RECEIVED -> VALIDATED -> FUND_LOCKED -> SENT -> CONFIRMED -> ACTIVE), retry logic with exponential backoff | State machine and workflow management | - |
+| T026 | Endorsement Orchestrator Service | Completed | Implement orchestrator with state machine (RECEIVED -> VALIDATED -> FUNDS_LOCKED -> SENT -> CONFIRMED -> ACTIVE), exponential backoff retry cycles, and retry/DLQ routing for insurer requests | Lifecycle tracked across Kafka, emits insurer requests/retries/DLQ events, and advances requests to ACTIVE on confirmation | - |
 | T027 | Insurer Gateway Service | Pending | Implement polymorphic adapter for different insurer protocols (REST, SOAP, SFTP), idempotency key generation, request/response logging to MongoDB | Multi-protocol insurer integration | - |
 | T028 | Analytics Service | Pending | Implement analytics service with anomaly detection (circuit breaker on velocity spikes), pattern analysis, and cash flow prediction | Anomaly detection and predictions | - |
 | T029 | Reconciliation Service | Pending | Implement reconciliation service for 2-way matching between internal records and insurer data | Automated reconciliation | - |
@@ -123,10 +123,10 @@ This document tracks the implementation progress of the Endorsement Management S
 ## Progress Summary
 
 - **Total Tasks**: 70
-- **Completed**: 38
+- **Completed**: 39
 - **In Progress**: 0
-- **Pending**: 32
-- **Completion**: 54.3%
+- **Pending**: 31
+- **Completion**: 55.7%
 
 ## Recent Updates
 
