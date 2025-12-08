@@ -83,7 +83,7 @@ This document tracks the implementation progress of the Endorsement Management S
 | T044 | Kafka consumer - Ledger | Completed | Added ledger consumer/service that locks funds (or fails) and emits funds.locked events, ready for the insurer pipeline | Ledger event consumer | - |
 | T045 | Kafka consumer - Insurer Gateway | Completed | Create Kafka consumer that sends requests to insurers and handles responses | Strategy-based insurer gateway service + worker, audit logging, configs | - |
 | T046 | DLQ and retry mechanism | Completed | Implement Dead Letter Queue handling with retry topics and exponential backoff | Orchestrator now routes failures through `insurer.request.retry`/`insurer.request.dlq`, and the insurer gateway handler honors the configured backoff delay before reattempting | - |
-| T047 | Park and Wake mechanism | Pending | Implement ON_HOLD_FUNDS status handling, park transactions, wake on balance increase | Insufficient funds recovery | - |
+| T047 | Park and Wake mechanism | Completed | Implement ON_HOLD_FUNDS status handling, park transactions, wake on balance increase | Balance-increase events now trigger a HoldReleaseService that updates ON_HOLD requests to `VALIDATED` and reprovisions them via `ledger.check_funds`. | - |
 
 ### Phase 8: Testing
 | Task ID | Task Name | Status | Prompt | Outcome Summary | Commit Hash |
@@ -123,11 +123,11 @@ This document tracks the implementation progress of the Endorsement Management S
 ## Progress Summary
 
 - **Total Tasks**: 70
-- **Completed**: 54
+- **Completed**: 55
 - **In Progress**: 0
-- **Pending**: 15
+- **Pending**: 14
 - **Skipped**: 1
-- **Completion**: 77.1%
+- **Completion**: 78.6%
 
 ## Recent Updates
 
@@ -160,6 +160,10 @@ This document tracks the implementation progress of the Endorsement Management S
 - **2025-12-15**:
   - Completed T046 by making the insurer gateway handler delay `insurer.request.retry` events for the orchestrator-calculated backoff before calling the gateway.
   - Confirmed orchestrator retry limits still send terminal failures to `insurer.request.dlq`, giving the DLQ visibility for manual intervention when needed.
+
+- **2025-12-16**:
+  - Completed T047 by adding `ledger.balance_increased` events and a HoldReleaseService/handler that wakes `ON_HOLD` requests when employer balances rise.
+  - Released parked endorsements by resetting them to `VALIDATED` and re-emitting their payloads to `ledger.check_funds`, keeping the workflow in Kafka instead of manual retries.
 
 
 ## Notes

@@ -22,6 +22,7 @@ from app.ledger.schema import (
     LedgerTopUpResponse,
     LedgerTransactionHistoryItem,
 )
+from app.ledger.events import publish_balance_increase
 from app.ledger_transaction.model import LedgerTransaction
 from app.schemas.pagination import PaginatedResponse, build_link_header
 
@@ -207,6 +208,13 @@ async def top_up_ledger(
     await session.commit()
 
     LEDGER_BALANCE.labels(employer_id=employer.id).set(float(new_balance))
+
+    publish_balance_increase(
+        employer.id,
+        request.amount,
+        new_balance,
+        source="top_up",
+    )
 
     return LedgerTopUpResponse(
         transaction_id=transaction.id,

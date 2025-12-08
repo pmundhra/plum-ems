@@ -117,6 +117,7 @@ class BaseAppSettings(BaseSettings):
     KAFKA_TOPIC_INGESTED: str = "endorsement.ingested"
     KAFKA_TOPIC_PRIORITIZED: str = "endorsement.prioritized"
     KAFKA_TOPIC_LEDGER_CHECK_FUNDS: str = "ledger.check_funds"
+    KAFKA_TOPIC_LEDGER_BALANCE_INCREASED: str = "ledger.balance_increased"
     KAFKA_TOPIC_LEDGER_FUNDS_LOCKED: str = "funds.locked"
     KAFKA_TOPIC_INSURER_REQUEST: str = "insurer.request"
     KAFKA_TOPIC_INSURER_REQUEST_RETRY: str = "insurer.request.retry"

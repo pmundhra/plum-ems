@@ -14,6 +14,7 @@ from app.employer.repository import EmployerRepository
 from app.ledger.pricing import LedgerPricingClient
 from app.ledger_transaction.model import LedgerTransaction
 from app.utils.logger import get_logger
+from app.ledger.events import publish_balance_increase
 
 logger = get_logger(__name__)
 
@@ -107,6 +108,13 @@ class LedgerService:
             await session.flush()
 
         LEDGER_TRANSACTIONS_TOTAL.labels(type=txn.type, status=txn.status).inc()
+        if is_credit and amount > Decimal("0"):
+            publish_balance_increase(
+                employer.id,
+                amount,
+                new_balance,
+                source="ledger_credit",
+            )
         await self._emit_funds_locked_event(
             endorsement_id,
             employer_id,
