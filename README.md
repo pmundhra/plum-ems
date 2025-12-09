@@ -16,7 +16,7 @@ The EMS automates the workflow of managing employee coverage changes (endorsemen
 
 ## Tech Stack
 
-- **Language**: Python 3.11+
+- **Language**: Python 3.14+
 - **Framework**: FastAPI
 - **Databases**: PostgreSQL 15, MongoDB 6.0, Redis 7.0
 - **Message Broker**: Apache Kafka
@@ -52,61 +52,70 @@ build/
 
 ### Prerequisites
 
-- Python 3.14+
-- PostgreSQL 17
-- MongoDB 8.0
-- Redis 8.0
-- Kafka 7.6.0 (KRaft mode - no Zookeeper required)
+- Docker (23.x+ recommended) with the Compose v2 plugin so you can run `docker compose`.
+- Environment configs are baked under `build/`. Copy `build/env.example` to `build/local/.env` or symlink to one of the stage-specific overrides (`local.env`, `staging.env`, `production.env`).
 
-### Installation
+### Docker local development
+
+1. Prepare the environment file:
+   ```bash
+   cp build/env.example build/local/.env
+   ```
+   Modify `.env` if you need different credentials (the local compose assumes Postgres/Mongo/Redis are reachable on the default ports).
+
+2. Start the stack:
+   ```bash
+   docker compose -f build/local/docker-compose.yml up --build
+   ```
+   The stack includes Postgres 17, MongoDB 8.0, Redis 8.0, Kafka 7.6 (KRaft mode), and all application workers.
+
+3. Run migrations inside the app container:
+   ```bash
+   docker compose -f build/local/docker-compose.yml exec app alembic upgrade head
+   ```
+   This inspects the `.env` file your compose stack is using and upgrades Postgres to the latest schema before any workers start handling Kafka traffic.
+
+4. Monitor health and logs:
+   ```bash
+   docker compose -f build/local/docker-compose.yml logs -f app
+   ```
+   The application exposes FastAPI on `http://localhost:8000`, Kafka UI (Kafdrop) on `http://localhost:9000`, and Prometheus metrics on `/metrics`.
+
+5. Tear down:
+   ```bash
+   docker compose -f build/local/docker-compose.yml down -v
+   ```
+   Use `--remove-orphans` if you staged additional services.
+
+### Manual local setup (optional)
 
 1. Install `uv` (if not already installed):
    ```bash
    curl -LsSf https://astral.sh/uv/install.sh | sh
    ```
 
-2. Clone the repository
-
-3. Install Python version (if needed):
+2. Install the required Python version (3.14 is the target):
    ```bash
    uv python install 3.14
    ```
 
-4. Install dependencies:
+3. Install dependencies:
    ```bash
    uv pip install -e .
-   uv pip install -e ".[dev]"  # For development dependencies
+   uv pip install -e ".[dev]"
    ```
 
-4. Set up environment variables:
-   - copy `env_configs/env.example` to `.env` or build one from the stage-specific files in `env_configs/` (`local.env`, `staging.env`, `production.env`)
-
-5. Run database migrations:
+4. Set up the `.env` file as described above and run database migrations:
    ```bash
    alembic upgrade head
    ```
 
-6. Start the application:
+5. Launch the API:
    ```bash
    uvicorn app.main:app --reload
    ```
 
 ## Development
-
-### Running Tests
-
-```bash
-# All tests
-pytest
-
-# With coverage
-pytest --cov=app --cov-report=html
-
-# Specific test type
-pytest tests/unit/
-pytest tests/integration/
-pytest tests/e2e/
-```
 
 ### Code Quality
 
